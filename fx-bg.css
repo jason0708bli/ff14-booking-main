@@ -1,0 +1,166 @@
+/* 狐的桌遊地 — 全站背景特效 */
+#bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fx-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* 店內照背景 — 輪播多張 */
+.fx-photo-stack {
+  position: absolute;
+  inset: 0;
+}
+
+.fx-shop-photo {
+  position: absolute;
+  inset: 0;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: brightness(0.42) saturate(0.9) contrast(1.05);
+  transform: scale(1.06);
+  opacity: 0;
+  transition: opacity 2.8s ease-in-out;
+}
+
+.fx-shop-photo.active {
+  opacity: 1;
+  animation: fx-photo-drift 28s ease-in-out infinite alternate;
+}
+
+.fx-shop-overlay {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 45%, rgba(180, 110, 45, 0.14), transparent 68%),
+    radial-gradient(ellipse 100% 100% at 50% 100%, rgba(8, 4, 2, 0.88), rgba(12, 6, 3, 0.55) 45%, rgba(6, 3, 2, 0.35) 100%),
+    linear-gradient(180deg, rgba(10, 5, 2, 0.55) 0%, rgba(15, 8, 4, 0.72) 55%, rgba(8, 4, 2, 0.92) 100%);
+}
+
+@keyframes fx-photo-drift {
+  0%   { transform: scale(1.06) translate(0, 0); }
+  100% { transform: scale(1.1) translate(-0.8%, -0.5%); }
+}
+
+/* 燭火暖光 — 緩慢游移 */
+.fx-glow-warm {
+  background:
+    radial-gradient(ellipse 50% 40% at 18% 78%, rgba(220, 130, 50, 0.18), transparent 72%),
+    radial-gradient(ellipse 45% 35% at 82% 70%, rgba(200, 100, 35, 0.14), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 50% 20%, rgba(160, 100, 45, 0.1), transparent 68%);
+  animation: fx-warm-drift 14s ease-in-out infinite alternate;
+  mix-blend-mode: soft-light;
+}
+
+.fx-glow-cool {
+  background:
+    radial-gradient(ellipse 30% 22% at 72% 22%, rgba(50, 80, 120, 0.04), transparent 70%);
+  animation: fx-cool-drift 18s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+@keyframes fx-warm-drift {
+  0%   { opacity: 0.75; transform: scale(1) translate(0, 0); }
+  50%  { opacity: 1; transform: scale(1.04) translate(1.5%, -1%); }
+  100% { opacity: 0.85; transform: scale(1.02) translate(-1%, 0.5%); }
+}
+
+@keyframes fx-cool-drift {
+  0%   { opacity: 0.5; transform: translate(0, 0); }
+  100% { opacity: 0.85; transform: translate(-2%, 1.5%); }
+}
+
+/* 飄動薄霧 */
+.fx-fog {
+  opacity: 0.35;
+  filter: blur(28px);
+}
+
+.fx-fog-a {
+  background: linear-gradient(105deg, transparent 30%, rgba(90, 70, 50, 0.12) 50%, transparent 70%);
+  animation: fx-fog-slide-a 22s linear infinite;
+}
+
+.fx-fog-b {
+  background: linear-gradient(-75deg, transparent 25%, rgba(50, 40, 60, 0.08) 48%, transparent 72%);
+  animation: fx-fog-slide-b 28s linear infinite;
+  opacity: 0.25;
+}
+
+@keyframes fx-fog-slide-a {
+  0%   { transform: translateX(-8%) translateY(0); }
+  100% { transform: translateX(8%) translateY(-2%); }
+}
+
+@keyframes fx-fog-slide-b {
+  0%   { transform: translateX(6%) translateY(2%); }
+  100% { transform: translateX(-6%) translateY(-1%); }
+}
+
+/* 餘燼粒子 canvas */
+.fx-embers-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+}
+
+/* 掃描微光（極淡） */
+.fx-shimmer {
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(200, 160, 90, 0.03) 50%,
+    transparent 58%
+  );
+  background-size: 200% 200%;
+  animation: fx-shimmer-pass 8s ease-in-out infinite;
+}
+
+@keyframes fx-shimmer-pass {
+  0%, 100% { background-position: 120% 50%; opacity: 0; }
+  45%      { opacity: 0.6; }
+  55%      { background-position: -20% 50%; opacity: 0; }
+}
+
+/* Hero 聚光 */
+.hero-spotlight {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 50% 45% at 50% 42%, rgba(180, 120, 60, 0.12), transparent 65%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(80, 50, 25, 0.08), transparent 70%);
+  animation: fx-hero-pulse 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes fx-hero-pulse {
+  0%   { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.03); }
+}
+
+/* 強化 body 暗角 */
+body.fx-enabled::before {
+  animation: fx-vignette-breathe 10s ease-in-out infinite alternate;
+}
+
+@keyframes fx-vignette-breathe {
+  0%   { opacity: 1; }
+  100% { opacity: 0.92; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-shop-photo { animation: none !important; transform: scale(1.06); }
+  .fx-glow-warm, .fx-glow-cool, .fx-fog-a, .fx-fog-b,
+  .fx-shimmer, .hero-spotlight, body.fx-enabled::before {
+    animation: none !important;
+  }
+  .fx-embers-canvas { display: none; }
+}

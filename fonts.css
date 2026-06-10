@@ -1,0 +1,51 @@
+/* 狐的桌遊地 — 華康新篆體（華康字型）
+   優先使用本機已安裝的華康新篆體；未安裝時依序 fallback。 */
+:root {
+  --font-hk: "華康新篆體", "DFNewChuan", "DFNewChuan-Md", "DFNewChuan-Bd", serif;
+  --font-size-root: 20px;
+  --font-size-body: 1.15rem;
+  --font-size-sm: 1.05rem;
+  --font-size-xs: 0.95rem;
+  --font-size-lg: 1.35rem;
+  --font-size-xl: 1.55rem;
+}
+
+html {
+  font-size: var(--font-size-root);
+}
+
+body,
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: var(--font-hk);
+  font-size: var(--font-size-body);
+  line-height: 1.75;
+}
+
+.font-cinzel {
+  font-family: var(--font-hk);
+}
+
+/* 覆蓋 Tailwind 較小字級 */
+.text-xs {
+  font-size: var(--font-size-xs) !important;
+}
+
+.text-sm {
+  font-size: var(--font-size-sm) !important;
+}
+
+.text-base {
+  font-size: var(--font-size-body) !important;
+}
+
+.text-lg {
+  font-size: var(--font-size-lg) !important;
+}
+
+.text-xl {
+  font-size: var(--font-size-xl) !important;
+}
