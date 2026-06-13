@@ -1,0 +1,193 @@
+/* 狐的桌遊地 — 霞鶩文楷 TC（LXGW WenKai TC，SIL OFL 免費商用）
+   書寫感楷體，繁體中文完整支援：https://fonts.google.com/specimen/LXGW+WenKai+TC */
+@import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap');
+
+:root {
+  --font-hk: "LXGW WenKai TC", "霞鶩文楷 TC", "Klee One", serif;
+  --font-size-root: 20px;
+  --font-size-body: 1.15rem;
+  --font-size-sm: 1.05rem;
+  --font-size-xs: 0.95rem;
+  --font-size-lg: 1.35rem;
+  --font-size-xl: 1.55rem;
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 28px;
+  /* 頁面 ↔ 內容區底色（已互換） */
+  --color-page: #6b5344;
+  --color-page-light: #7d6350;
+  --color-page-dark: #4a3828;
+  --color-surface: #0f0805;
+  --color-surface-mid: #1a1008;
+  --color-surface-deep: #0a0604;
+  --gradient-page: linear-gradient(180deg, var(--color-page-light) 0%, var(--color-page) 55%, var(--color-page-dark) 100%);
+  --gradient-surface: linear-gradient(180deg, var(--color-surface-mid) 0%, var(--color-surface) 55%, var(--color-surface-deep) 100%);
+  /* 按鈕用 — 暖棕底（較高彩度） */
+  --color-btn-light: #a07040;
+  --color-btn: #885828;
+  --color-btn-deep: #6e4420;
+  --gradient-surface-btn: linear-gradient(180deg, var(--color-btn-light) 0%, var(--color-btn) 55%, var(--color-btn-deep) 100%);
+  --color-brown-bright: #d4a058;
+  --texture-paper: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+  /* 旋狀年輪木紋 */
+  --texture-wood-swirl:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      transparent 0 5px,
+      rgba(28, 16, 8, 0.38) 5px 6px,
+      transparent 6px 14px,
+      rgba(55, 34, 18, 0.22) 14px 15px,
+      transparent 15px 24px
+    ),
+    repeating-conic-gradient(
+      from 22deg at 50% 50%,
+      rgba(38, 22, 10, 0.48) 0deg 5deg,
+      rgba(95, 60, 35, 0.2) 5deg 10deg,
+      rgba(48, 28, 14, 0.42) 10deg 15deg,
+      rgba(88, 55, 32, 0.16) 15deg 20deg
+    );
+  --inset-page: rgba(125, 99, 80, 0.22);
+  --inset-page-strong: rgba(125, 99, 80, 0.32);
+  /* 文字色 — 標題偏黃棕、內文偏淺 */
+  --text-on-dark: #ddd0bc;
+  --text-muted-dark: #b5a590;
+  --text-body: #ebe2d4;
+  --text-title: #d9ae58;
+  --text-title-bright: #e8c878;
+  --text-title-beige: #e2d4b8;
+  --text-title-sub: #c9a050;
+  --text-nav: #c4a870;
+  /* 生藍 — 併桌加入 */
+  --blue-raw-light: #4aabdc;
+  --blue-raw: #2a88c4;
+  --blue-raw-deep: #1868a0;
+  --blue-raw-border: #0f4870;
+  /* 深藍 — Discord */
+  --blue-deep-light: #2a4a65;
+  --blue-deep: #1a3050;
+  --blue-deep-dark: #0f2030;
+  --blue-deep-border: #0a1828;
+}
+
+html {
+  font-size: var(--font-size-root);
+}
+
+body,
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: var(--font-hk);
+  font-size: var(--font-size-body);
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+.font-cinzel {
+  font-family: var(--font-hk);
+  font-weight: 700;
+}
+
+h1, h2, h3, h4,
+.gold-text,
+.page-title,
+.game-title {
+  color: var(--text-title);
+}
+
+.hero-title-main {
+  color: var(--text-title-bright);
+}
+
+.hero-title-sub {
+  color: var(--text-title-beige);
+}
+
+.text-text-muted,
+.muted {
+  color: var(--text-muted-dark) !important;
+}
+
+/* 木質按鈕 — 全站統一（冒險公會章程同款） */
+.btn-wood {
+  font-family: var(--font-hk);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 240% 240%, 100% 100%;
+  background-position: center, center;
+}
+
+.btn-surface,
+.btn-gold,
+.btn-join,
+.btn-discord {
+  background-image:
+    var(--texture-wood-swirl),
+    var(--gradient-surface-btn);
+  background-blend-mode: overlay, normal;
+  color: var(--text-body);
+  border: 2px solid rgba(74, 52, 32, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.18),
+    0 4px 0 #4a3018,
+    0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.btn-surface:hover,
+.btn-gold:hover,
+.btn-join:hover,
+.btn-discord:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06) saturate(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.18),
+    0 6px 0 #4a3018,
+    0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.btn-surface:active,
+.btn-gold:active,
+.btn-join:active,
+.btn-discord:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 3px 10px rgba(0, 0, 0, 0.35),
+    0 2px 0 #4a3018;
+}
+
+.btn-gold:disabled,
+.btn-surface:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+/* 覆蓋 Tailwind 較小字級 */
+.text-xs {
+  font-size: var(--font-size-xs) !important;
+}
+
+.text-sm {
+  font-size: var(--font-size-sm) !important;
+}
+
+.text-base {
+  font-size: var(--font-size-body) !important;
+}
+
+.text-lg {
+  font-size: var(--font-size-lg) !important;
+}
+
+.text-xl {
+  font-size: var(--font-size-xl) !important;
+}

@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公會書記後台 ─ 狐的桌遊地</title>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="fx-bg.css" />
+    <style>
+        :root {
+            --paper: #6b5344; --paper-light: #7d6350; --paper-dark: #4a3828;
+            --gold-dark: #5c4a28; --blood: #6b1a1a; --blue-seal: #1e3a55;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-hk);
+            font-size: var(--font-size-body);
+            background-image: var(--texture-wood-swirl), var(--gradient-page);
+            background-repeat: no-repeat, no-repeat;
+            background-size: 180% 180%, 100% 100%;
+            background-position: center top, center;
+            background-blend-mode: overlay, normal;
+            color: var(--text-on-dark);
+            min-height: 100vh;
+        }
+        .font-cinzel { font-family: var(--font-hk); }
+        .page-wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 5rem 1rem 3rem; }
+        .nav-bar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            background: linear-gradient(180deg, #1a1008 0%, #0a0604 100%);
+            border-bottom: 2px solid var(--gold-dark);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.8);
+            padding: 0.85rem 1rem;
+        }
+        .nav-inner { max-width: 960px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .brand { color: var(--text-title-bright); font-weight: bold; letter-spacing: 0.15em; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+        .nav-link { color: var(--text-nav); text-decoration: none; font-size: 0.95rem; letter-spacing: 0.12em; background: none; border: none; cursor: pointer; font-family: inherit; }
+        .nav-link:hover { color: var(--text-title-bright); }
+        .panel {
+            color: var(--text-body);
+            background:
+                var(--texture-paper),
+                linear-gradient(160deg, rgba(0,0,0,0.25) 0%, transparent 40%),
+                var(--gradient-surface);
+            border: 3px double rgba(26, 16, 8, 0.9);
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.35), 0 8px 0 #0a0604, 0 16px 40px rgba(0,0,0,0.65);
+            padding: 2rem 1.75rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .panel::before {
+            content: '✦'; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            font-size: 0.65rem; color: var(--gold-dark); opacity: 0.35; letter-spacing: 0.5em;
+        }
+        .page-title {
+            text-align: center; color: var(--text-title); font-size: 2rem;
+            border-bottom: 2px solid rgba(26,16,8,0.5); padding-bottom: 0.75rem; margin-bottom: 1.5rem;
+        }
+        h3 { color: var(--text-title-sub); font-family: var(--font-hk); font-size: 1.3rem; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        .status-hint {
+            text-align: center; font-weight: 600; padding: 0.85rem;
+            background: var(--inset-page); border: 1px dashed rgba(138,115,68,0.35);
+            color: var(--text-muted-dark); margin-bottom: 1.5rem;
+        }
+        .field {
+            border: 2px solid rgba(26, 16, 8, 0.8);
+            background: var(--inset-page);
+            color: var(--text-body);
+            padding: 0.75rem 1rem;
+            font-family: var(--font-hk);
+            font-size: 1.2rem;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3);
+            margin: 0.25rem 0.5rem 0.25rem 0;
+        }
+        .time-select {
+            font-size: 1.4rem;
+            font-variant-numeric: tabular-nums;
+            min-width: 8.5rem;
+            padding: 0.8rem 1.1rem;
+        }
+        .time-field { font-size: 1.1rem; color: var(--text-body); }
+        .field-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-bottom: 0.75rem; }
+        .btn {
+            padding: 0.65rem 1.25rem;
+            border: 2px solid #1a1008;
+            cursor: pointer;
+            font-family: var(--font-hk);
+            font-weight: 700;
+            transition: transform 0.15s;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:disabled { cursor: not-allowed; opacity: 0.55; }
+        .btn-outline {
+            background: rgba(20, 12, 6, 0.4);
+            color: #8a7355;
+            border-color: #5c4a28;
+        }
+        .btn-danger {
+            background: linear-gradient(180deg, #8b3030 0%, #6b1a1a 100%);
+            color: #e8d0d0;
+        }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .card {
+            background: var(--inset-page);
+            border: 1px solid rgba(26,16,8,0.7);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .card-title { display: flex; justify-content: space-between; gap: 1rem; align-items: start; margin-bottom: 0.5rem; }
+        .card-title strong { color: var(--text-body); }
+        .status-badge {
+            color: var(--text-title); font-family: var(--font-hk); font-size: 1rem;
+            border: 1px solid rgba(196,144,112,0.35); padding: 0.15rem 0.5rem;
+        }
+        .muted { color: #9a8870; font-size: 1.05rem; }
+        .empty { opacity: 0.75; padding: 0.75rem 0; color: var(--text-muted-dark); }
+        .game-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+        .game-tag {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            background: var(--inset-page); padding: 0.35rem 0.65rem;
+            border: 1px solid rgba(26,16,8,0.7); color: var(--text-body);
+        }
+        .booking-row {
+            font-size: 1.05rem; padding: 0.75rem 0;
+            border-top: 1px dashed rgba(138,115,68,0.25);
+        }
+        .seal-track { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.35rem; }
+        .seal-mark {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 2px solid rgba(26,16,8,0.55);
+            background: rgba(0,0,0,0.15);
+        }
+        .seal-mark.filled {
+            background: radial-gradient(circle at 35% 30%, #9a4040, #5c1818);
+            border-color: #3d1010;
+        }
+        .seal-mark.filled.blue {
+            background: radial-gradient(circle at 35% 30%, #4a7a9a, #1e3a55);
+            border-color: #152840;
+        }
+        .headcount-caption { font-size: 0.9rem; color: #8a7355; font-family: var(--font-hk); margin-top: 0.25rem; }
+        .member-list { margin-top: 0.5rem; font-size: 1rem; }
+        .member-list-title {
+            font-family: var(--font-hk);
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            color: #8a7355;
+            margin-bottom: 0.25rem;
+        }
+        .member-item {
+            padding: 0.35rem 0;
+            color: #c8b898;
+            border-bottom: 1px solid rgba(26,16,8,0.15);
+        }
+        .member-item:last-child { border-bottom: none; }
+        .member-item .world { color: #b89860; margin-right: 0.35rem; }
+        .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+        .hidden { display: none; }
+        .welcome { color: var(--text-title-sub); font-weight: 600; margin-bottom: 1rem; }
+        .member-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 1rem 0;
+            border-top: 1px dashed rgba(138,115,68,0.25);
+        }
+        .member-row:first-child { border-top: none; padding-top: 0; }
+        .member-row-name { color: var(--text-body); font-weight: 600; }
+        .member-row-meta { color: var(--text-muted-dark); font-size: 1rem; margin-top: 0.25rem; }
+        .member-row-points {
+            font-family: var(--font-hk);
+            font-size: 1.75rem;
+            color: #e8c878;
+            min-width: 3rem;
+            text-align: right;
+        }
+        .member-adjust {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        .member-adjust input[type="number"] { width: 5rem; }
+        .time-hint { font-size: 0.92rem; margin: 0.35rem 0 0.75rem; }
+        .member-adjust input.member-spend { width: 7rem; }
+        .member-redeem {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            align-items: center;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+        .member-redeem-label { color: #9a8870; font-size: 0.85rem; margin-right: 0.25rem; }
+        .btn-redeem {
+            font-size: 0.78rem;
+            padding: 0.35rem 0.6rem;
+            background: rgba(20, 12, 6, 0.5);
+            border: 1px solid rgba(138, 115, 68, 0.45);
+            color: #c4a870;
+            cursor: pointer;
+            font-family: var(--font-hk);
+        }
+        .btn-redeem:hover { background: rgba(40, 28, 16, 0.6); }
+        @media (max-width: 720px) {
+            .page-wrap { padding-top: 4.5rem; }
+            .field-row { flex-direction: column; align-items: stretch; }
+            .field { margin: 0.25rem 0; width: 100%; }
+        }
+    </style>
+    <link rel="stylesheet" href="ui-feedback.css" />
+</head>
+<body class="fx-enabled">
+    <div id="bg-fx" aria-hidden="true">
+        <div class="fx-layer fx-photo-stack"></div>
+        <div class="fx-layer fx-shop-overlay"></div>
+        <div class="fx-layer fx-paper-veil"></div>
+        <div class="fx-layer fx-wood-grain"></div>
+        <div class="fx-layer fx-glow-warm"></div>
+        <div class="fx-layer fx-glow-cool"></div>
+        <div class="fx-layer fx-fog fx-fog-a"></div>
+        <div class="fx-layer fx-fog fx-fog-b"></div>
+        <div class="fx-layer fx-shimmer"></div>
+        <canvas class="fx-embers-canvas"></canvas>
+    </div>
+    <nav class="nav-bar">
+        <div class="nav-inner">
+            <div class="font-cinzel brand">⚜ 公會書記後台 ⚜</div>
+            <div style="display:flex;gap:1rem;align-items:center;">
+                <button class="nav-link hidden" id="logoutBtn" type="button">登出</button>
+                <a href="index.html" class="nav-link">← 返回前台</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-wrap">
+        <div class="panel">
+            <h2 class="page-title font-cinzel">GUILD ADMINISTRATION</h2>
+
+            <div id="loginBox">
+                <h3>主持人登入</h3>
+                <div class="field-row">
+                    <label>帳號 <input class="field" type="text" id="username"></label>
+                </div>
+                <div class="field-row">
+                    <label>密碼 <input class="field" type="password" id="password"></label>
+                </div>
+                <button class="btn btn-gold" id="loginBtn" type="button" data-async data-loading-text="登入中">登入</button>
+            </div>
+
+            <div id="adminContent" class="hidden">
+                <p id="welcomeText" class="welcome"></p>
+                <div>
+                    <h3>發布班次</h3>
+                    <div class="field-row">
+                        <label>日期 <input class="field" type="date" id="opDate"></label>
+                        <label class="time-field">開始
+                            <select class="field time-select" id="opStart"></select>
+                        </label>
+                        <label class="time-field">結束
+                            <select class="field time-select" id="opEnd"></select>
+                        </label>
+                    </div>
+                    <p class="muted time-hint">時間為 24 小時制下拉選單（整點）</p>
+                    <div>
+                        <span class="muted">開放遊戲：</span>
+                        <div id="gamesPicker" class="game-tags"></div>
+                    </div>
+                    <button class="btn btn-gold" id="addOpBtn" type="button" data-async data-loading-text="發布中">發布召集令</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="status-hint" class="status-hint">請先登入主持人帳號</div>
+
+        <div id="shiftSection" class="hidden">
+            <div class="panel">
+                <div class="toolbar">
+                    <h3 style="margin:0;">班次與預約</h3>
+                    <button class="btn btn-outline" id="refreshBtn" type="button" data-async data-loading-text="讀取中">重新整理</button>
+                </div>
+                <div id="shiftList"></div>
+            </div>
+        </div>
+
+        <div id="memberSection" class="hidden">
+            <div class="panel">
+                <h3>會員登記</h3>
+                <p class="muted" style="margin-bottom:1rem;">由店長於後台登記新會員。消費點數由會員自行指定存入哪個已登記角色。</p>
+                <div class="field-row">
+                    <label>世界
+                        <select class="field" id="memberRegServer">
+                            <option value="">請選擇</option>
+                            <option value="伊弗利特">伊弗利特</option>
+                            <option value="利維坦">利維坦</option>
+                            <option value="迦樓羅">迦樓羅</option>
+                            <option value="鳳凰">鳳凰</option>
+                            <option value="巴哈姆特">巴哈姆特</option>
+                            <option value="泰坦">泰坦</option>
+                            <option value="奧汀">奧汀</option>
+                        </select>
+                    </label>
+                    <label>角色名 <input class="field" type="text" id="memberRegCharacter" maxlength="40" placeholder="角色全名"></label>
+                    <button class="btn btn-gold" id="memberRegisterBtn" type="button" data-async data-loading-text="登記中">登記會員</button>
+                </div>
+            </div>
+            <div class="panel">
+                <h3>會員點數管理</h3>
+                <p class="muted" style="margin-bottom:1rem;">搜尋會員、登記消費（每 35 萬gil自動 +1 點）、手動加減點或兌換扣點。留空關鍵字可列出全部會員。</p>
+                <div class="field-row">
+                    <label>關鍵字 <input class="field" type="text" id="memberSearchQuery" placeholder="角色名（部分符合）"></label>
+                    <label>世界
+                        <select class="field" id="memberSearchServer">
+                            <option value="">全部</option>
+                            <option value="伊弗利特">伊弗利特</option>
+                            <option value="利維坦">利維坦</option>
+                            <option value="迦樓羅">迦樓羅</option>
+                            <option value="鳳凰">鳳凰</option>
+                            <option value="巴哈姆特">巴哈姆特</option>
+                            <option value="泰坦">泰坦</option>
+                            <option value="奧汀">奧汀</option>
+                        </select>
+                    </label>
+                    <button class="btn btn-gold" id="memberSearchBtn" type="button" data-async data-loading-text="搜尋中">搜尋會員</button>
+                </div>
+                <div id="memberSearchStatus" class="muted" style="margin-top:0.5rem;"></div>
+                <div id="memberSearchResults"></div>
+            </div>
+        </div>
+    </div>
+
+<script src="ui-feedback.js"></script>
+<script>
+    const API_URL = window.FF14_BOOKING_API_URL;
+    const toast = (msg, type) => UIFeedback.toast(msg, type);
+    const SESSION_KEY = 'ff14_host_session';
+    let hostSession = null;
+    let shifts = [];
+
+    const loginBox = document.getElementById('loginBox');
+    const adminContent = document.getElementById('adminContent');
+    const shiftSection = document.getElementById('shiftSection');
+    const memberSection = document.getElementById('memberSection');
+    const statusHint = document.getElementById('status-hint');
+    const shiftList = document.getElementById('shiftList');
+    const gamesPicker = document.getElementById('gamesPicker');
+    const welcomeText = document.getElementById('welcomeText');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const memberSearchQuery = document.getElementById('memberSearchQuery');
+    const memberSearchServer = document.getElementById('memberSearchServer');
+    const memberSearchBtn = document.getElementById('memberSearchBtn');
+    const memberSearchStatus = document.getElementById('memberSearchStatus');
+    const memberSearchResults = document.getElementById('memberSearchResults');
+    const memberRegServer = document.getElementById('memberRegServer');
+    const memberRegCharacter = document.getElementById('memberRegCharacter');
+    const memberRegisterBtn = document.getElementById('memberRegisterBtn');
+    let memberResults = [];
+
+    function isSplendorGame(name) {
+        return /璀璨寶石|水晶商會|Splendor/i.test(String(name || ''));
+    }
+
+    function getPlayerMax(gameName) {
+        return isSplendorGame(gameName) ? 4 : 10;
+    }
+
+    function getBookingTotal(booking) {
+        return (parseInt(booking.playerCount, 10) || 0) + (parseInt(booking.joinedCount, 10) || 0);
+    }
+
+    function buildHeadcount(total, gameName) {
+        const max = getPlayerMax(gameName);
+        const count = Math.min(max, Math.max(0, total));
+        const wrap = document.createElement('div');
+        const track = document.createElement('div');
+        track.className = 'seal-track';
+        for (let i = 0; i < max; i += 1) {
+            const seal = document.createElement('span');
+            seal.className = 'seal-mark' + (i < count ? ' filled' : '') + (isSplendorGame(gameName) ? ' blue' : '');
+            track.appendChild(seal);
+        }
+        const caption = document.createElement('div');
+        caption.className = 'headcount-caption';
+        caption.textContent = `${count} / ${max} 名冒險者`;
+        wrap.append(track, caption);
+        return wrap;
+    }
+
+    function formatMember(server, characterId) {
+        const s = String(server || '').trim();
+        const c = String(characterId || '').trim();
+        if (!s && !c) return '（未填寫）';
+        if (s && c) return `${s} / ${c}`;
+        return s || c;
+    }
+
+    function buildMemberList(title, members) {
+        if (!members || !members.length) return null;
+        const wrap = document.createElement('div');
+        wrap.className = 'member-list';
+        const heading = document.createElement('div');
+        heading.className = 'member-list-title';
+        heading.textContent = title;
+        wrap.appendChild(heading);
+        members.forEach((member) => {
+            const item = document.createElement('div');
+            item.className = 'member-item';
+            const world = document.createElement('span');
+            world.className = 'world';
+            world.textContent = member.server || '—';
+            item.append(world, document.createTextNode(member.characterId || '—'));
+            wrap.appendChild(item);
+        });
+        return wrap;
+    }
+
+    function renderBookingMembers(booking) {
+        const wrap = document.createElement('div');
+        const host = booking.host || {
+            server: booking.server,
+            characterId: booking.characterId
+        };
+        const hostList = buildMemberList('預約者', [host]);
+        if (hostList) wrap.appendChild(hostList);
+
+        const joinMembers = booking.joinMembers || [];
+        if (booking.type === '併桌' && joinMembers.length) {
+            const joinList = buildMemberList('併桌加入', joinMembers);
+            if (joinList) wrap.appendChild(joinList);
+        } else if (booking.type === '併桌' && (booking.joinedCount || 0) > 0 && !joinMembers.length) {
+            const note = document.createElement('div');
+            note.className = 'member-list-title';
+            note.textContent = `併桌加入 ${booking.joinedCount} 名（名單未記錄）`;
+            wrap.appendChild(note);
+        }
+        return wrap;
+    }
+
+    function setStatus(message) {
+        statusHint.textContent = message;
+    }
+
+    async function apiGet(action) {
+        const res = await fetch(`${API_URL}?action=${encodeURIComponent(action)}&t=${Date.now()}`);
+        return res.json();
+    }
+
+    async function apiPost(payload) {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        return res.json();
+    }
+
+    function loadSession() {
+        try {
+            hostSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+        } catch (_) {
+            hostSession = null;
+        }
+    }
+
+    function saveSession(session) {
+        hostSession = session;
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+
+    function clearSession() {
+        hostSession = null;
+        sessionStorage.removeItem(SESSION_KEY);
+    }
+
+    function formatTime24(value) {
+        if (value == null || value === '') return '';
+        if (typeof value === 'number' && !Number.isNaN(value)) {
+            const total = Math.round(value * 24 * 60) % (24 * 60);
+            const h = Math.floor(total / 60);
+            const m = total % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+        const s = String(value).trim();
+        const hhmm = s.match(/^(\d{1,2}):(\d{2})/);
+        if (hhmm) {
+            return `${String(parseInt(hhmm[1], 10)).padStart(2, '0')}:${hhmm[2]}`;
+        }
+        if (s.includes('T')) return s.split('T')[1].substring(0, 5);
+        const pm = s.match(/下午\s*(\d{1,2}):(\d{2})/);
+        if (pm) {
+            let h = parseInt(pm[1], 10);
+            if (h < 12) h += 12;
+            return `${String(h).padStart(2, '0')}:${pm[2]}`;
+        }
+        const am = s.match(/上午\s*(\d{1,2}):(\d{2})/);
+        if (am) {
+            let h = parseInt(am[1], 10);
+            if (h === 12) h = 0;
+            return `${String(h).padStart(2, '0')}:${am[2]}`;
+        }
+        return s.substring(0, 5);
+    }
+
+    function buildHourlyTimeOptions() {
+        const options = [];
+        for (let h = 0; h < 24; h += 1) {
+            options.push(`${String(h).padStart(2, '0')}:00`);
+        }
+        return options;
+    }
+
+    function initTimeSelect(selectId, defaultValue) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        select.innerHTML = '';
+        buildHourlyTimeOptions().forEach((time) => {
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            select.appendChild(option);
+        });
+        if (defaultValue && [...select.options].some((opt) => opt.value === defaultValue)) {
+            select.value = defaultValue;
+        }
+    }
+
+    function renderGamesPicker() {
+        gamesPicker.innerHTML = '';
+        (hostSession?.games || []).filter(Boolean).forEach((game) => {
+            const label = document.createElement('label');
+            label.className = 'game-tag';
+            label.innerHTML = `<input type="checkbox" value="${game.trim()}" checked> ${game.trim()}`;
+            gamesPicker.appendChild(label);
+        });
+    }
+
+    function showLoggedIn() {
+        loginBox.classList.add('hidden');
+        adminContent.classList.remove('hidden');
+        shiftSection.classList.remove('hidden');
+        memberSection.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
+        welcomeText.textContent = `歡迎，${hostSession.displayName || hostSession.username}`;
+        renderGamesPicker();
+        fetchShifts();
+    }
+
+    function showLoggedOut() {
+        loginBox.classList.remove('hidden');
+        adminContent.classList.add('hidden');
+        shiftSection.classList.add('hidden');
+        memberSection.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+        shiftList.innerHTML = '';
+        memberSearchResults.innerHTML = '';
+        memberSearchStatus.textContent = '';
+        setStatus('請先登入主持人帳號');
+    }
+
+    async function login() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) return toast('請輸入帳號與密碼', 'error');
+
+        setStatus('登入中...');
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({ action: 'login', username, password });
+                if (!result.success) {
+                    setStatus(result.message || '登入失敗');
+                    return toast(result.message || '登入失敗', 'error');
+                }
+                saveSession({
+                    username,
+                    password,
+                    displayName: result.displayName,
+                    games: result.games || []
+                });
+                showLoggedIn();
+            } catch (error) {
+                console.error(error);
+                setStatus('無法連線到後端');
+                toast('登入失敗，請確認 GAS 部署狀態。', 'error');
+            }
+        }, '登入中...');
+    }
+
+    async function fetchShifts() {
+        if (!API_URL) {
+            setStatus('尚未設定 Google Apps Script API URL');
+            return;
+        }
+
+        return UIFeedback.withLoading(async () => {
+            setStatus('正在讀取班次資料...');
+            try {
+                const result = await apiGet('getShifts');
+                if (!result.success) {
+                    setStatus(result.message || '讀取失敗');
+                    return;
+                }
+                shifts = result.data || [];
+                setStatus('據點連線正常');
+                renderShifts();
+            } catch (error) {
+                console.error(error);
+                setStatus('無法讀取據點資料，請確認 GAS 部署狀態。');
+            }
+        }, '讀取班次中...');
+    }
+
+    async function addShift() {
+        const date = document.getElementById('opDate').value;
+        const startTime = document.getElementById('opStart').value;
+        const endTime = document.getElementById('opEnd').value;
+        const gamesOffered = [...gamesPicker.querySelectorAll('input:checked')].map((el) => el.value);
+
+        if (!date) return toast('請選擇日期', 'error');
+        if (!startTime || !endTime) return toast('請選擇開始與結束時間', 'error');
+        if (startTime >= endTime) return toast('結束時間必須晚於開始時間', 'error');
+        if (!gamesOffered.length) return toast('請至少選擇一項開放遊戲', 'error');
+
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({
+                    action: 'addShift',
+                    date,
+                    startTime,
+                    endTime,
+                    host: hostSession.displayName,
+                    gamesOffered
+                });
+                if (!result.success) {
+                    toast(result.message || '發布失敗', 'error');
+                    return;
+                }
+                toast('班次已發布', 'success');
+                await fetchShifts();
+            } catch (error) {
+                console.error(error);
+                toast('發布失敗，請稍後再試。', 'error');
+            }
+        }, '發布班次中...');
+    }
+
+    async function endShift(shiftId) {
+        if (!confirm('確認結束此班次？')) return;
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({ action: 'endShift', shiftId });
+                if (!result.success) {
+                    toast(result.message || '操作失敗', 'error');
+                    return;
+                }
+                toast('班次已結束', 'success');
+                await fetchShifts();
+            } catch (error) {
+                console.error(error);
+                toast('操作失敗，請稍後再試。', 'error');
+            }
+        }, '處理中...');
+    }
+
+    async function deleteShift(shiftId, bookingCount) {
+        const msg = bookingCount > 0
+            ? `此班次有 ${bookingCount} 筆預約，刪除後無法復原。確認刪除？`
+            : '確認刪除此班次？刪除後無法復原。';
+        if (!confirm(msg)) return;
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({ action: 'deleteShift', shiftId });
+                if (!result.success) {
+                    toast(result.message || '刪除失敗', 'error');
+                    return;
+                }
+                toast(result.message || '班次已刪除', 'success');
+                await fetchShifts();
+            } catch (error) {
+                console.error(error);
+                toast('刪除失敗，請稍後再試。', 'error');
+            }
+        }, '刪除中...');
+    }
+
+    function appendEmpty(container, text) {
+        const empty = document.createElement('p');
+        empty.className = 'empty';
+        empty.textContent = text;
+        container.appendChild(empty);
+    }
+
+    function renderShifts() {
+        shiftList.innerHTML = '';
+        const sorted = [...shifts].sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`));
+
+        if (!sorted.length) {
+            appendEmpty(shiftList, '尚無班次');
+            return;
+        }
+
+        sorted.forEach((shift) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const titleRow = document.createElement('div');
+            titleRow.className = 'card-title';
+            const title = document.createElement('strong');
+            title.textContent = `${shift.date} ${formatTime24(shift.startTime)}–${formatTime24(shift.endTime)}｜${shift.host || '未指定主持人'}`;
+            const status = document.createElement('span');
+            status.className = 'status-badge';
+            status.textContent = shift.status || '未知';
+            titleRow.append(title, status);
+
+            const games = document.createElement('p');
+            games.className = 'muted';
+            games.textContent = `開放遊戲：${(shift.gamesOffered || []).filter(Boolean).join('、') || '未設定'}`;
+
+            const bookingsWrap = document.createElement('div');
+            bookingsWrap.style.marginTop = '0.75rem';
+            if ((shift.bookings || []).length) {
+                shift.bookings.forEach((booking) => {
+                    const row = document.createElement('div');
+                    row.className = 'booking-row';
+                    const line = document.createElement('div');
+                    line.textContent = `${formatTime24(booking.startTime)}–${formatTime24(booking.endTime)}｜${booking.game}｜${booking.type}`;
+                    row.append(line, buildHeadcount(getBookingTotal(booking), booking.game), renderBookingMembers(booking));
+                    bookingsWrap.appendChild(row);
+                });
+            } else {
+                bookingsWrap.innerHTML = '<p class="empty">尚無預約</p>';
+            }
+
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+            if (shift.status === '開放中') {
+                const endBtn = document.createElement('button');
+                endBtn.className = 'btn btn-danger';
+                endBtn.type = 'button';
+                endBtn.dataset.async = '';
+                endBtn.dataset.loadingText = '處理中';
+                endBtn.textContent = '結束班次';
+                endBtn.addEventListener('click', () => endShift(shift.shiftId));
+                actions.appendChild(endBtn);
+            }
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-outline';
+            deleteBtn.type = 'button';
+            deleteBtn.dataset.async = '';
+            deleteBtn.dataset.loadingText = '刪除中';
+            deleteBtn.textContent = '刪除班次';
+            deleteBtn.addEventListener('click', () => deleteShift(shift.shiftId, (shift.bookings || []).length));
+            actions.appendChild(deleteBtn);
+
+            card.append(titleRow, games, bookingsWrap, actions);
+            shiftList.appendChild(card);
+        });
+    }
+
+    function formatGil(n) {
+        const num = parseInt(n, 10) || 0;
+        return num.toLocaleString('zh-TW');
+    }
+
+    function renderMemberResults(list) {
+        memberSearchResults.innerHTML = '';
+        if (!list.length) {
+            appendEmpty(memberSearchResults, '找不到符合條件的會員');
+            return;
+        }
+
+        list.forEach((member) => {
+            const row = document.createElement('div');
+            row.className = 'member-row';
+            row.dataset.memberId = member.memberId;
+
+            const info = document.createElement('div');
+            info.style.flex = '1';
+            info.innerHTML = `
+                <div class="member-row-name">${member.server} / ${member.characterId}</div>
+                <div class="member-row-meta">編號 ${member.memberId}${member.registeredAt ? ' · 登記 ' + member.registeredAt : ''}</div>
+                <div class="member-row-meta">累積消費 ${formatGil(member.totalSpent || 0)} gil · 距下一點 ${formatGil(member.spendToNextPoint != null ? member.spendToNextPoint : 350000)} gil</div>
+            `;
+
+            const points = document.createElement('div');
+            points.className = 'member-row-points';
+            points.textContent = member.points;
+
+            const spend = document.createElement('div');
+            spend.className = 'member-adjust';
+            spend.style.width = '100%';
+            spend.innerHTML = `
+                <input class="field member-spend" type="number" min="1" step="1" placeholder="消費gil">
+                <button class="btn btn-join member-spend-btn" type="button">登記消費</button>
+            `;
+            spend.querySelector('.member-spend-btn').addEventListener('click', () => {
+                recordMemberSpending(member.memberId, spend);
+            });
+            spend.querySelector('.member-spend-btn').dataset.async = '';
+
+            const adjust = document.createElement('div');
+            adjust.className = 'member-adjust';
+            adjust.style.width = '100%';
+            adjust.innerHTML = `
+                <input class="field member-delta" type="number" placeholder="±點數" step="1">
+                <input class="field member-reason" type="text" placeholder="備註（選填）">
+                <button class="btn btn-gold member-apply-btn" type="button">套用</button>
+            `;
+
+            adjust.querySelector('.member-apply-btn').addEventListener('click', () => {
+                applyMemberPoints(member.memberId, adjust);
+            });
+            adjust.querySelector('.member-apply-btn').dataset.async = '';
+
+            const redeem = document.createElement('div');
+            redeem.className = 'member-redeem';
+            const redeemLabel = document.createElement('span');
+            redeemLabel.className = 'member-redeem-label';
+            redeemLabel.textContent = '兌換扣點：';
+            redeem.appendChild(redeemLabel);
+            [
+                { delta: -6, label: '阿瓦隆 -6' },
+                { delta: -7, label: '阿瓦隆2 -7' },
+                { delta: -7, label: '璀璨寶石 -7' }
+            ].forEach((item) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn-redeem';
+                btn.textContent = item.label;
+                btn.addEventListener('click', () => {
+                    applyMemberRedeem(member.memberId, item.delta, item.label.replace(/ -\\d+$/, ''));
+                });
+                redeem.appendChild(btn);
+            });
+
+            row.append(info, points, spend, adjust, redeem);
+            memberSearchResults.appendChild(row);
+        });
+    }
+
+    async function searchMembers() {
+        if (!hostSession?.username || !hostSession?.password) {
+            toast('請重新登入後再搜尋會員', 'error');
+            return;
+        }
+
+        return UIFeedback.withLoading(async () => {
+            memberSearchStatus.textContent = '搜尋中...';
+            memberSearchResults.innerHTML = '';
+            try {
+                const result = await apiPost({
+                    action: 'adminSearchMembers',
+                    username: hostSession.username,
+                    password: hostSession.password,
+                    query: memberSearchQuery.value.trim(),
+                    server: memberSearchServer.value.trim()
+                });
+                if (!result.success) {
+                    memberSearchStatus.textContent = result.message || '搜尋失敗';
+                    return;
+                }
+                memberResults = result.data || [];
+                memberSearchStatus.textContent = `共 ${memberResults.length} 位會員`;
+                renderMemberResults(memberResults);
+            } catch (error) {
+                console.error(error);
+                memberSearchStatus.textContent = '搜尋失敗，請確認 GAS 已部署會員功能';
+            }
+        }, '搜尋會員中...');
+    }
+
+    async function applyMemberRedeem(memberId, delta, gameLabel) {
+        if (!confirm(`確認兌換「${gameLabel}」並扣 ${Math.abs(delta)} 點？`)) return;
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({
+                    action: 'adjustMemberPoints',
+                    username: hostSession.username,
+                    password: hostSession.password,
+                    memberId,
+                    pointsDelta: delta,
+                    reason: '兌換' + gameLabel + '免費一場'
+                });
+                if (!result.success) {
+                    toast(result.message || '兌換失敗', 'error');
+                    return;
+                }
+                toast(result.message || '兌換扣點完成', 'success');
+                await searchMembers();
+            } catch (error) {
+                console.error(error);
+                toast('兌換失敗，請稍後再試', 'error');
+            }
+        }, '兌換扣點中...');
+    }
+
+    async function recordMemberSpending(memberId, spendEl) {
+        const amountInput = spendEl.querySelector('.member-spend');
+        const amount = parseInt(amountInput.value, 10);
+        if (!amount || amount <= 0) {
+            toast('請輸入有效的消費金額（gil）', 'error');
+            return;
+        }
+        if (!confirm(`確認登記消費 ${formatGil(amount)} gil？（每 35 萬gil自動 +1 點）`)) return;
+
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({
+                    action: 'recordMemberSpending',
+                    username: hostSession.username,
+                    password: hostSession.password,
+                    memberId,
+                    amount
+                });
+                if (!result.success) {
+                    toast(result.message || '登記失敗', 'error');
+                    return;
+                }
+                toast(result.message || '消費已登記', 'success');
+                amountInput.value = '';
+                await searchMembers();
+            } catch (error) {
+                console.error(error);
+                toast('登記失敗，請確認 GAS 已重新部署', 'error');
+            }
+        }, '登記消費中...');
+    }
+
+    async function applyMemberPoints(memberId, adjustEl) {
+        const deltaInput = adjustEl.querySelector('.member-delta');
+        const reasonInput = adjustEl.querySelector('.member-reason');
+        const delta = parseInt(deltaInput.value, 10);
+        const reason = reasonInput.value.trim();
+
+        if (!delta || delta === 0) {
+            toast('請輸入非零的點數增減（正數加點、負數扣點）', 'error');
+            return;
+        }
+        if (!confirm(`確認${delta > 0 ? '加' : '扣'} ${Math.abs(delta)} 點？`)) return;
+
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({
+                    action: 'adjustMemberPoints',
+                    username: hostSession.username,
+                    password: hostSession.password,
+                    memberId,
+                    pointsDelta: delta,
+                    reason
+                });
+                if (!result.success) {
+                    toast(result.message || '更新失敗', 'error');
+                    return;
+                }
+                toast(result.message || '點數已更新', 'success');
+                deltaInput.value = '';
+                reasonInput.value = '';
+                await searchMembers();
+            } catch (error) {
+                console.error(error);
+                toast('更新失敗，請稍後再試', 'error');
+            }
+        }, '更新點數中...');
+    }
+
+    async function registerMember() {
+        if (!hostSession?.username || !hostSession?.password) {
+            toast('請重新登入後再登記會員', 'error');
+            return;
+        }
+        const server = memberRegServer.value.trim();
+        const characterId = memberRegCharacter.value.trim();
+        if (!server || !characterId) {
+            toast('請填寫世界與角色名', 'error');
+            return;
+        }
+
+        return UIFeedback.withLoading(async () => {
+            try {
+                const result = await apiPost({
+                    action: 'registerMember',
+                    username: hostSession.username,
+                    password: hostSession.password,
+                    server,
+                    characterId
+                });
+                if (!result.success) {
+                    toast(result.message || '登記失敗', 'error');
+                    return;
+                }
+                toast(result.message || '會員登記成功！', 'success');
+                memberRegCharacter.value = '';
+                await searchMembers();
+            } catch (error) {
+                console.error(error);
+                toast('登記失敗，請稍後再試', 'error');
+            }
+        }, '登記會員中...');
+    }
+
+    initTimeSelect('opStart', '16:00');
+    initTimeSelect('opEnd', '22:00');
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('addOpBtn').addEventListener('click', addShift);
+    document.getElementById('refreshBtn').addEventListener('click', fetchShifts);
+    memberSearchBtn.addEventListener('click', searchMembers);
+    memberRegisterBtn.addEventListener('click', registerMember);
+    memberSearchQuery.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') searchMembers();
+    });
+    logoutBtn.addEventListener('click', () => {
+        clearSession();
+        showLoggedOut();
+    });
+
+    loadSession();
+    if (hostSession) showLoggedIn();
+    else showLoggedOut();
+</script>
+<script src="fx-bg.js"></script>
+</body>
+</html>

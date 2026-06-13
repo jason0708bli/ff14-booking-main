@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>狐的桌遊地 ─ FF14 桌遊店</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="config.js"></script>
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="fx-bg.css" />
+  <style>
+    :root {
+      --paper: #6b5344;
+      --paper-light: #7d6350;
+      --paper-dark: #4a3828;
+      --ink: #1a1008;
+      --ink-muted: #3d2e22;
+      --gold: #8a7344;
+      --gold-light: #a08850;
+      --gold-dark: #5c4a28;
+      --blood: #6b1a1a;
+      --blood-light: #8b3030;
+      --wood: #0a0604;
+      --wood-mid: #1a1008;
+      --blue-seal: #1e3a55;
+      --border-ornate: rgba(20, 12, 6, 0.55);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-hk);
+      font-size: var(--font-size-body);
+      background: var(--gradient-page);
+      color: var(--text-on-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .font-cinzel { font-family: var(--font-hk); }
+    .gold-text { color: var(--text-title); }
+
+    /* 燭光暈影 — 詳見 fx-bg.css body.fx-enabled */
+    .slot-grid { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .slot-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: rgba(45, 27, 13, 0.15);
+      border: 2px solid rgba(45, 27, 13, 0.3);
+    }
+    .slot-dot.green {
+      background: radial-gradient(circle at 35% 35%, #6aaa6a, #2d6b2d);
+      border-color: #1a4a1a;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .slot-dot.purple {
+      background: radial-gradient(circle at 35% 35%, var(--blue-seal), #1a3050);
+      border-color: #152840;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.25), 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    select option { background-color: var(--paper-light); color: var(--ink); }
+
+    .hero-gradient {
+      background: linear-gradient(
+        to bottom,
+        rgba(125, 99, 80, 0.04) 0%,
+        rgba(107, 83, 68, 0.22) 65%,
+        rgba(90, 70, 52, 0.42) 100%
+      );
+    }
+    .card-hover { transition: transform 0.35s ease, box-shadow 0.35s ease; }
+    .card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(197, 160, 89, 0.3);
+    }
+
+    /* 主按鈕樣式見 fonts.css（btn-gold / btn-surface 統一） */
+    .btn-gold:disabled {
+      transform: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 0 #0a0604;
+    }
+    .btn-outline {
+      background: rgba(20, 12, 6, 0.4);
+      color: #8a7355;
+      font-family: var(--font-hk);
+      font-weight: 600;
+      border: 2px solid #5c4a28;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 4px 0 #0a0604;
+      transition: all 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-outline:hover {
+      background: rgba(40, 28, 16, 0.5);
+      color: #c4a870;
+    }
+    /* 併桌加入等小按鈕 — 見 fonts.css btn-join */
+    .join-panel {
+      margin-top: 1rem;
+      padding: 1rem 1rem 1rem 1.25rem;
+      background: var(--inset-page);
+      border: 1px solid rgba(26, 16, 8, 0.8);
+      border-left: 3px solid rgba(42, 136, 196, 0.65);
+    }
+    /* 章程 */
+    .rules-grid { display: grid; gap: 1.5rem; }
+    @media (min-width: 768px) {
+      .rules-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    }
+    .rules-list {
+      margin: 0.75rem 0 0;
+      padding-left: 1.25rem;
+      color: var(--text-muted-dark);
+      line-height: 1.85;
+    }
+    .rules-list li { margin-bottom: 0.35rem; }
+    .redeem-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      font-size: 1.05rem;
+    }
+    .redeem-table th,
+    .redeem-table td {
+      border: 1px solid rgba(92, 74, 40, 0.35);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    .redeem-table th {
+      background: var(--inset-page-strong);
+      color: var(--text-title);
+      font-family: var(--font-hk);
+      font-weight: 600;
+    }
+    .redeem-table td { color: var(--text-body); }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid rgba(45, 27, 13, 0.2);
+      border-top-color: var(--blood);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .text-gold { color: var(--gold-light); }
+    .text-gold-light { color: #c4a870; }
+    .text-text-muted { color: var(--text-muted-dark); }
+    .section-wrap .gold-text { color: var(--text-title); }
+    .section-wrap .section-heading { border-color: rgba(138, 115, 68, 0.4); }
+    .hover\:text-gold:hover { color: var(--gold); }
+    .hover\:text-gold-light:hover { color: var(--gold-light); }
+
+    /* 連線狀態 — 燭台指示 */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(26, 15, 8, 0.6);
+      border: 1px solid var(--border-ornate);
+      color: var(--paper-light);
+    }
+    .status-dot-inner { width: 8px; height: 8px; border-radius: 50%; }
+    .status-online { border-color: rgba(45, 107, 45, 0.5); }
+    .status-online .status-dot-inner { background: #4a9a4a; box-shadow: 0 0 6px #4a9a4a; }
+    .status-offline { border-color: rgba(139, 0, 0, 0.5); }
+    .status-offline .status-dot-inner { background: var(--blood); box-shadow: 0 0 6px var(--blood); }
+    .status-checking { border-color: rgba(197, 160, 89, 0.5); }
+    .status-checking .status-dot-inner { background: var(--gold); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+    /* 破舊羊皮紙面板 */
+    .panel, .slot-card {
+      color: var(--text-body);
+      background:
+        var(--texture-paper),
+        linear-gradient(160deg, rgba(0,0,0,0.25) 0%, transparent 40%),
+        var(--gradient-surface);
+      border: 3px double rgba(26, 16, 8, 0.9);
+      box-shadow:
+        inset 0 0 80px rgba(0, 0, 0, 0.35),
+        inset 0 -20px 40px rgba(0, 0, 0, 0.15),
+        0 8px 0 #0a0604,
+        0 16px 40px rgba(0, 0, 0, 0.65);
+      position: relative;
+    }
+    .panel::before, .slot-card::before {
+      content: '✦';
+      position: absolute;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: var(--gold-dark);
+      opacity: 0.35;
+      letter-spacing: 0.5em;
+    }
+    .panel .text-text-muted, .slot-card .text-text-muted { color: var(--text-muted-dark); }
+    .panel .gold-text, .slot-card .gold-text { color: var(--text-title); }
+    .panel .text-gold, .slot-card .text-gold { color: var(--text-title-sub); }
+    .slot-card { padding: 1.75rem 1.5rem 1.5rem; }
+    .slot-card.selected {
+      outline: 3px solid var(--blood);
+      outline-offset: 3px;
+      box-shadow:
+        inset 0 0 50px rgba(80, 20, 20, 0.2),
+        0 8px 0 #0a0604,
+        0 0 0 4px rgba(138, 115, 68, 0.2),
+        0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    .field {
+      width: 100%;
+      border: 2px solid rgba(26, 16, 8, 0.8);
+      background: var(--inset-page);
+      color: var(--text-body);
+      padding: 0.85rem 1rem;
+      outline: none;
+      font-family: var(--font-hk);
+      font-size: var(--font-size-body);
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3);
+    }
+    .field::placeholder { color: var(--text-muted-dark); opacity: 0.75; }
+    .field:focus {
+      border-color: var(--blood);
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(107, 26, 26, 0.25);
+    }
+    select.field option { background: #3d2e22; color: var(--text-body); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.85rem;
+      font-size: 0.88rem;
+      font-family: var(--font-hk);
+      letter-spacing: 0.12em;
+      border: 1px solid var(--ink);
+      color: var(--blood);
+      background: rgba(139, 0, 0, 0.06);
+    }
+    .empty-state {
+      border: 2px dashed rgba(138, 115, 68, 0.3);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted-dark);
+      background: var(--inset-page);
+    }
+
+    /* 導覽列 — 破舊橡木 */
+    .nav-bar {
+      background: linear-gradient(180deg, #1a1008 0%, #0a0604 100%);
+      border-bottom: 2px solid var(--gold-dark);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.8);
+    }
+    .nav-bar .brand { color: var(--text-title-bright); text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+    .brand-with-seals {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    /* 火漆章 */
+    .wax-seal {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 32% 28%, #a03030 0%, #7a1818 42%, #5c1010 100%);
+      border: 2px solid #3d0a0a;
+      box-shadow:
+        inset 0 2px 4px rgba(255, 200, 180, 0.22),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+        0 2px 5px rgba(0, 0, 0, 0.45);
+      transform: rotate(-8deg);
+    }
+    .wax-seal:last-of-type { transform: rotate(8deg); }
+    .wax-seal-icon {
+      width: 76%;
+      height: 76%;
+      display: block;
+      color: rgba(255, 220, 195, 0.95);
+    }
+    .wax-seal-sm {
+      width: 1.65rem;
+      height: 1.65rem;
+    }
+    .wax-seal-md {
+      width: 2.1rem;
+      height: 2.1rem;
+    }
+    .nav-link { color: var(--text-nav); opacity: 0.9; }
+    .nav-link:hover { opacity: 1; color: var(--text-title-bright); }
+
+    /* Hero — 透出店內照背景 */
+    .hero-section {
+      background: transparent;
+    }
+    .hero-ornament {
+      border-top: 1px solid var(--gold-dark);
+      border-bottom: 1px solid var(--gold-dark);
+      color: #3d2e22;
+      text-shadow: none;
+    }
+    .hero-ornament span {
+      color: #4a3828;
+    }
+    .hero-title-main {
+      color: var(--text-title-bright);
+      text-shadow: 0 4px 16px rgba(0,0,0,0.95);
+      letter-spacing: 0.22em;
+    }
+    .hero-title-sub {
+      color: var(--text-title-beige);
+      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.85);
+      letter-spacing: 0.14em;
+    }
+    .hero-desc { color: var(--text-muted-dark); }
+
+    .section-heading {
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 0.5rem;
+    }
+    .section-wrap { position: relative; z-index: 1; }
+
+    .booking-list {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border-ornate);
+      font-size: 1rem;
+    }
+    .booking-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(45, 27, 13, 0.12);
+    }
+    .booking-meta { flex: 1; min-width: 0; }
+    .booking-time-game { display: block; margin-bottom: 0.5rem; }
+    .headcount-block { margin-top: 0.35rem; }
+    .headcount-label {
+      font-family: var(--font-hk);
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      color: #8a7355;
+      margin-bottom: 0.35rem;
+    }
+    .seal-track {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 0.25rem;
+    }
+    .seal-mark {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(26, 16, 8, 0.55);
+      background: rgba(0, 0, 0, 0.15);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+    .seal-mark.filled {
+      background: radial-gradient(circle at 35% 30%, #9a4040, #5c1818);
+      border-color: #3d1010;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.15), 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .seal-mark.filled.blue {
+      background: radial-gradient(circle at 35% 30%, var(--blue-deep-light), var(--blue-deep-dark));
+      border-color: var(--blue-deep-border);
+    }
+    .headcount-caption {
+      font-size: 0.92rem;
+      color: var(--text-muted-dark);
+      font-family: var(--font-hk);
+      letter-spacing: 0.08em;
+    }
+    .field-hint {
+      font-size: 0.9rem;
+      color: #7a6858;
+      margin-top: 0.25rem;
+    }
+    .join-panel {
+      margin-top: 1rem;
+      padding: 1rem 1rem 1rem 1.25rem;
+      background: var(--inset-page);
+      border: 1px solid rgba(26, 16, 8, 0.8);
+      border-left: 3px solid rgba(42, 136, 196, 0.65);
+    }
+    footer {
+      border-top: 2px solid #1a1008;
+      background: var(--color-page-dark);
+      color: rgba(138, 115, 85, 0.55);
+    }
+    footer .brand-with-seals {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* 分頁切換 */
+    .app-view.hidden { display: none !important; }
+    .nav-tab {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+    }
+    .nav-tab.active { color: #e8c878 !important; opacity: 1 !important; text-shadow: 0 0 12px rgba(200, 160, 80, 0.35); }
+    .brand-home { cursor: pointer; }
+
+    /* 子頁共用 */
+    .sub-page-header {
+      text-align: center;
+      padding: 6.5rem 1rem 2.5rem;
+      border-bottom: 1px solid rgba(92, 74, 40, 0.3);
+    }
+    .sub-page-header h2 {
+      color: var(--text-title-bright);
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      margin-bottom: 0.75rem;
+    }
+    .sub-page-header p {
+      color: var(--text-muted-dark);
+      max-width: 36rem;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+    .sub-page-kicker {
+      font-family: var(--font-hk);
+      letter-spacing: 0.35em;
+      font-size: 0.9rem;
+      color: #8a7355;
+      margin-bottom: 1rem;
+    }
+
+    .info-panel {
+      color: var(--text-body);
+      background:
+        var(--texture-paper),
+        linear-gradient(160deg, rgba(0,0,0,0.35) 0%, transparent 40%),
+        var(--gradient-surface);
+      border: 3px double rgba(26, 16, 8, 0.9);
+      box-shadow: inset 0 0 80px rgba(0,0,0,0.4), 0 8px 0 #0a0604, 0 16px 40px rgba(0,0,0,0.65);
+      padding: 2rem 1.75rem;
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+    .info-panel .label {
+      font-family: var(--font-hk);
+      font-size: 0.88rem;
+      letter-spacing: 0.2em;
+      color: #8a7355;
+      margin-bottom: 0.5rem;
+    }
+    .info-panel .address {
+      font-family: var(--font-hk);
+      font-size: clamp(1.65rem, 4vw, 2.4rem);
+      color: var(--text-title);
+      letter-spacing: 0.08em;
+    }
+    .info-panel .hint { margin-top: 0.75rem; font-size: 1.05rem; color: var(--text-muted-dark); line-height: 1.7; }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .gallery-item {
+      border: 3px double rgba(26, 16, 8, 0.85);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+      background: rgba(10, 6, 4, 0.75);
+      overflow: hidden;
+      backdrop-filter: blur(2px);
+    }
+    .gallery-item img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .gallery-item:hover img { transform: scale(1.02); }
+    .gallery-caption {
+      padding: 0.65rem 0.85rem;
+      font-size: 0.95rem;
+      color: #8a7355;
+      letter-spacing: 0.1em;
+      text-align: center;
+      border-top: 1px solid rgba(92, 74, 40, 0.4);
+    }
+
+    .game-panel {
+      color: var(--text-body);
+      background:
+        var(--texture-paper),
+        linear-gradient(160deg, rgba(0,0,0,0.35) 0%, transparent 40%),
+        var(--gradient-surface);
+      border: 3px double rgba(26, 16, 8, 0.9);
+      box-shadow: inset 0 0 80px rgba(0,0,0,0.4), 0 8px 0 #0a0604, 0 16px 40px rgba(0,0,0,0.65);
+      padding: 2rem 1.75rem 1.75rem;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+    .game-panel::before {
+      content: '✦';
+      position: absolute;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: var(--gold-dark);
+      opacity: 0.35;
+      letter-spacing: 0.5em;
+    }
+    .game-title { color: var(--text-title); font-size: clamp(1.55rem, 3vw, 2.05rem); margin: 0.5rem 0 0.75rem; }
+    .game-tagline { color: var(--text-muted-dark); margin-bottom: 1.25rem; line-height: 1.75; font-size: var(--font-size-body); }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .meta-item {
+      background: var(--inset-page);
+      border: 1px solid rgba(26,16,8,0.7);
+      padding: 0.65rem 0.85rem;
+      text-align: center;
+    }
+    .meta-item span { display: block; font-size: 0.85rem; color: #8a7355; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+    .meta-item strong { color: var(--text-body); font-size: 1.05rem; }
+    .game-section-title {
+      color: var(--text-title-sub);
+      font-family: var(--font-hk);
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      border-bottom: 1px solid rgba(26,16,8,0.5);
+      padding-bottom: 0.35rem;
+      margin: 1.5rem 0 0.85rem;
+    }
+    .game-panel p, .game-panel li { color: var(--text-body); line-height: 1.85; }
+    .game-panel ul, .game-panel ol { padding-left: 1.25rem; margin-bottom: 0.5rem; }
+    .game-panel li { margin-bottom: 0.35rem; }
+    .flavor-quote {
+      margin: 1.25rem 0;
+      padding: 1rem 1.25rem;
+      border-left: 3px solid var(--blood);
+      background: var(--inset-page);
+      font-style: italic;
+      color: var(--text-muted-dark);
+    }
+    .win-box {
+      background: var(--inset-page-strong);
+      border: 1px dashed rgba(196,144,112,0.35);
+      padding: 1rem;
+      margin-top: 0.5rem;
+    }
+    .btn-gold-link {
+      display: inline-block;
+      margin-top: 1rem;
+      text-decoration: none;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 0.85rem 1.35rem;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.55;
+      letter-spacing: 0.06em;
+      word-break: keep-all;
+    }
+    .game-panel .btn-gold-link {
+      width: 100%;
+    }
+
+    /* 招募橫向滑動 */
+    .slot-scroll-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
+      position: relative;
+    }
+    .slot-scroll-wrap.hidden { display: none !important; }
+    .slot-scroll-track {
+      display: flex;
+      gap: 1.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      flex: 1;
+      min-width: 0;
+      padding: 0.5rem 0.25rem 1.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: #5c4a28 rgba(0, 0, 0, 0.2);
+    }
+    .slot-scroll-track::-webkit-scrollbar { height: 6px; }
+    .slot-scroll-track::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
+    .slot-scroll-track::-webkit-scrollbar-thumb { background: #5c4a28; border-radius: 3px; }
+    .slot-scroll-track .slot-card {
+      flex: 0 0 min(360px, 88vw);
+      scroll-snap-align: start;
+      min-height: 100%;
+    }
+    .slot-scroll-btn {
+      flex: 0 0 2.25rem;
+      align-self: center;
+      height: 2.75rem;
+      border: 2px solid #5c4a28;
+      background: rgba(20, 12, 6, 0.65);
+      color: #c4a870;
+      font-family: var(--font-hk);
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .slot-scroll-btn:hover {
+      background: rgba(40, 28, 16, 0.85);
+      color: #e8c878;
+    }
+    .slot-scroll-hint {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #7a6858;
+      letter-spacing: 0.12em;
+      margin-top: 0.25rem;
+      font-family: var(--font-hk);
+    }
+    .slot-scroll-hint.hidden { display: none !important; }
+
+    /* 會員專區 */
+    .member-points-display {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      margin-top: 1rem;
+      background: var(--inset-page);
+      border: 2px double rgba(92, 74, 40, 0.45);
+    }
+    .member-points-value {
+      font-family: var(--font-hk);
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      color: #e8c878;
+      line-height: 1.1;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    }
+    .member-points-label {
+      font-family: var(--font-hk);
+      font-size: 0.9rem;
+      letter-spacing: 0.2em;
+      color: #8a7355;
+      margin-top: 0.5rem;
+    }
+    .member-info-line { color: var(--text-body); margin-top: 0.35rem; font-size: 1.05rem; }
+    .member-result-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--inset-page);
+      border: 1px solid rgba(26, 16, 8, 0.7);
+    }
+    .member-result-box.error { border-color: rgba(107, 26, 26, 0.5); color: #c49070; }
+    .member-saved-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed rgba(138, 115, 68, 0.3);
+    }
+  </style>
+  <link rel="stylesheet" href="ui-feedback.css" />
+</head>
+<body class="fx-enabled">
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <symbol id="icon-fox-seal" viewBox="0 0 24 24">
+      <path d="M12 2 7.8 9.2 4.2 8l1.1 10.2c.35 3.6 2.9 6.6 6.7 7.9V22h2v-3.9c3.8-1.3 6.35-4.3 6.7-7.9L21.8 8 18.2 9.2 12 2zm0 3.4 2.6 4.6H9.4L12 5.4z"/>
+      <circle cx="9.6" cy="13.1" r="1"/>
+      <circle cx="14.4" cy="13.1" r="1"/>
+      <path d="M10.2 15.2c.8.7 2.8.7 3.6 0-.5.9-1.3 1.4-1.8 1.4s-1.3-.5-1.8-1.4z"/>
+    </symbol>
+  </svg>
+  <div id="bg-fx" aria-hidden="true">
+    <div class="fx-layer fx-photo-stack"></div>
+    <div class="fx-layer fx-shop-overlay"></div>
+    <div class="fx-layer fx-paper-veil"></div>
+    <div class="fx-layer fx-wood-grain"></div>
+    <div class="fx-layer fx-glow-warm"></div>
+    <div class="fx-layer fx-glow-cool"></div>
+    <div class="fx-layer fx-fog fx-fog-a"></div>
+    <div class="fx-layer fx-fog fx-fog-b"></div>
+    <div class="fx-layer fx-shimmer"></div>
+    <canvas class="fx-embers-canvas"></canvas>
+  </div>
+  <!-- Navigation -->
+  <nav class="nav-bar fixed top-0 left-0 right-0 z-50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="font-cinzel brand text-lg font-bold tracking-widest brand-with-seals brand-home" role="button" tabindex="0">
+        <span class="wax-seal wax-seal-sm" aria-hidden="true"><svg class="wax-seal-icon" viewBox="0 0 24 24"><use href="#icon-fox-seal"/></svg></span>
+        <span>狐的桌遊地</span>
+        <span class="wax-seal wax-seal-sm" aria-hidden="true"><svg class="wax-seal-icon" viewBox="0 0 24 24"><use href="#icon-fox-seal"/></svg></span>
+      </div>
+      <div class="flex items-center gap-4 flex-wrap justify-end">
+        <div id="connectionStatus" class="status-indicator status-checking">
+          <div class="status-dot-inner"></div>
+          <span id="statusText">連線檢查中...</span>
+        </div>
+        <button type="button" class="nav-link nav-tab text-xs transition-colors tracking-widest active" data-view="home">預約首頁</button>
+        <button type="button" class="nav-link nav-tab text-xs transition-colors tracking-widest" data-view="shop">店內一覽</button>
+        <button type="button" class="nav-link nav-tab text-xs transition-colors tracking-widest" data-view="games">桌遊圖鑑</button>
+        <button type="button" class="nav-link nav-tab text-xs transition-colors tracking-widest" data-view="member">會員專區</button>
+        <a href="https://discord.gg/EWsuh9Madc" target="_blank" rel="noopener noreferrer" class="nav-link text-xs transition-colors tracking-widest">Discord</a>
+        <a href="admin.html" class="nav-link text-xs transition-colors tracking-widest">公會書記後台</a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="view-home" class="app-view">
+  <!-- Hero Section -->
+  <section class="hero-section relative h-screen flex items-center justify-center overflow-hidden section-wrap">
+    <div class="hero-spotlight"></div>
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 hero-gradient"></div>
+    </div>
+    <div class="relative z-10 text-center px-4">
+      <div class="mb-6 inline-block hero-ornament py-2 px-8">
+        <span class="font-cinzel tracking-[0.4em] text-sm md:text-base">圍桌開局 ─ 同寫冒險篇章</span>
+      </div>
+      <h1 class="font-cinzel text-5xl md:text-7xl font-black mb-6">
+        <span class="block hero-title-main">狐的桌遊地</span>
+        <span class="block hero-title-sub mt-3 text-3xl md:text-5xl">FF14 桌遊店</span>
+      </h1>
+      <p class="text-lg md:text-xl hero-desc mb-12 max-w-2xl mx-auto leading-relaxed tracking-widest">
+        在火燭搖曳的橡木大廳中，與同伴圍桌開啟屬於您的冒險棋局
+      </p>
+      <div class="flex flex-col md:flex-row gap-5 justify-center flex-wrap">
+        <button onclick="scrollToSection('#rules')" class="btn-surface btn-wood px-10 py-4 text-base tracking-widest">冒險公會章程</button>
+        <a href="https://discord.gg/EWsuh9Madc" target="_blank" rel="noopener noreferrer" class="btn-surface btn-wood px-10 py-4 text-base tracking-widest">Discord 社群</a>
+        <button onclick="scrollToSection('#lobby')" class="btn-surface btn-wood px-10 py-4 text-base tracking-widest">登記冒險時段</button>
+        <button type="button" onclick="switchView('shop')" class="btn-surface btn-wood px-10 py-4 text-base tracking-widest">店內一覽</button>
+        <button type="button" onclick="switchView('games')" class="btn-surface btn-wood px-10 py-4 text-base tracking-widest">桌遊圖鑑</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 冒險須知 -->
+  <section id="rules" class="section-wrap py-20 px-4 max-w-5xl mx-auto">
+    <h2 class="font-cinzel text-3xl font-bold gold-text section-heading mb-10 text-center">冒險公會章程</h2>
+
+    <div class="rules-grid cols-2 mb-8">
+      <article class="panel p-6 pt-10">
+        <span class="badge mb-4">壹</span>
+        <h3 class="text-xl font-bold gold-text mb-3 font-cinzel">預約流程</h3>
+        <ol class="rules-list">
+          <li>從<strong>預約大廳公告板</strong>挑選仍開放、且符合人數的冒險時段。</li>
+          <li>點選班次後，預約表單會依該班次<strong>自動顯示可選時間</strong>（非固定時段）。</li>
+          <li>填寫遊戲、包場或併桌、世界、角色名、人數與預計局數後送出。</li>
+          <li>同一時段與其他團之間需保留<strong>至少 30 分鐘緩衝</strong>，以便換場與整理。</li>
+        </ol>
+      </article>
+      <article class="panel p-6 pt-10">
+        <span class="badge mb-4">貳</span>
+        <h3 class="text-xl font-bold gold-text mb-3 font-cinzel">包場與併桌</h3>
+        <p class="text-text-muted leading-7 mb-2"><strong>包場</strong>：由您開團並指定初始人數，獨立佔用該時段的一桌。</p>
+        <p class="text-text-muted leading-7 mb-2"><strong>併桌</strong>：與同時段、同遊戲的既有隊伍<strong>共用一桌</strong>，適合人數不足或想認識新冒險者的情況。</p>
+        <ul class="rules-list">
+          <li>開新併桌：預約類型選「併桌」，填寫您的人數後送出，即成為該桌團長。</li>
+          <li>加入併桌：先從公告板<strong>選定班次（按預約）</strong>，在表單下方「<strong>加入既有併桌</strong>」區塊填好世界與角色名，再點選隊伍旁的<strong>藍色加入按鈕</strong>；每次加入登記 <strong>1 名</strong>冒險者。</li>
+          <li>璀璨寶石（水晶商會）併桌上限 <strong>4 人</strong>；其餘遊戲上限 <strong>10 人</strong>。</li>
+          <li>若您開新併桌時，同時段已有同遊戲併桌且尚有空位，系統會提示是否改為加入該桌。</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="rules-grid cols-2 mb-8">
+      <article class="panel p-6 pt-10">
+        <span class="badge mb-4">參</span>
+        <h3 class="text-xl font-bold gold-text mb-3 font-cinzel">準時與變更</h3>
+        <ul class="rules-list">
+          <li>請依預約時間準時到店；若遲到可能壓縮可遊玩時間。</li>
+          <li>臨時無法赴約，請<strong>盡早</strong>聯繫本店，以便釋出時段予其他冒險者。</li>
+          <li>店內一覽、桌遊圖鑑可於本站查閱；實際開桌以當日公告與現場狀況為準。</li>
+        </ul>
+      </article>
+      <article class="panel p-6 pt-10">
+        <span class="badge mb-4">肆</span>
+        <h3 class="text-xl font-bold gold-text mb-3 font-cinzel">會員登記</h3>
+        <p class="text-text-muted leading-7 mb-2">會員登記由<strong>店長於後台</strong>辦理，前台「會員專區」僅供<strong>查詢點數</strong>。</p>
+        <ul class="rules-list">
+          <li>登記時需提供<strong>世界（伺服器）＋角色全名</strong>，一組角色即一個會員帳號。</li>
+          <li>若您有多個角色，可各自登記；消費累積的點數由您<strong>自行決定存入哪個帳號</strong>，結帳時向店長告知即可。</li>
+          <li>未登記者無法累積點數；登記後即可於會員專區查詢目前點數與累積消費進度。</li>
+        </ul>
+      </article>
+    </div>
+
+    <article class="panel p-6 md:p-8 pt-10 max-w-3xl mx-auto">
+      <span class="badge mb-4">伍</span>
+      <h3 class="text-xl font-bold gold-text mb-3 font-cinzel">會員點數累積與兌換</h3>
+      <p class="text-text-muted leading-7 mb-3">於本店消費（桌遊、相關服務等）可累積會員點數。每累積消費 <strong>350,000 gil</strong> 自動獲得 <strong>1 點</strong>（由店長登記消費後系統自動計算，可跨多次消費累計）。</p>
+      <p class="text-text-muted leading-7 mb-4">兌換時請向店長提出，確認後自您指定帳號扣點：</p>
+      <table class="redeem-table">
+        <thead>
+          <tr><th>所需點數</th><th>兌換內容</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>6 點</td><td>一場《阿瓦隆》免費</td></tr>
+          <tr><td>7 點</td><td>一場《阿瓦隆 2》免費</td></tr>
+          <tr><td>7 點</td><td>一場《璀璨寶石》免費</td></tr>
+        </tbody>
+      </table>
+      <p class="text-text-muted text-sm mt-4 leading-6">點數不可轉讓至其他會員帳號；兌換後恕不退點，詳細以現場說明為準。</p>
+    </article>
+  </section>
+
+  <!-- 預約大廳 -->
+  <section id="lobby" class="section-wrap py-24 px-4 max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+      <div>
+        <h2 class="font-cinzel text-3xl md:text-4xl font-bold gold-text section-heading mb-4">冒險召集大廳</h2>
+        <p class="text-text-muted tracking-widest">當前張貼於公告板的開放時段</p>
+      </div>
+      <button type="button" id="refreshLobbyBtn" class="flex items-center gap-2 text-gold hover:text-gold-light transition-colors group" data-async data-loading-text="刷新公告中">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        <span class="tracking-widest font-cinzel text-sm">刷新公告</span>
+      </button>
+    </div>
+
+    <div id="lobbyNotice" class="empty-state">
+      <div class="spinner mx-auto mb-4"></div>
+      正在翻閱公會公告板...
+    </div>
+    <div id="slotScrollWrap" class="slot-scroll-wrap hidden">
+      <button type="button" class="slot-scroll-btn" id="slotScrollPrev" aria-label="上一則招募">‹</button>
+      <div id="slotList" class="slot-scroll-track"></div>
+      <button type="button" class="slot-scroll-btn" id="slotScrollNext" aria-label="下一則招募">›</button>
+    </div>
+    <p id="slotScrollHint" class="slot-scroll-hint hidden">← 左右滑動查看更多招募 →</p>
+  </section>
+
+  <!-- 預約表單 -->
+  <section id="booking" class="section-wrap py-20 px-4 max-w-4xl mx-auto">
+    <div class="panel p-6 md:p-10 pt-12">
+      <div class="mb-8">
+        <span class="badge mb-4">冒險契約書</span>
+        <h2 class="font-cinzel text-3xl md:text-4xl font-bold gold-text mb-3">簽署冒險契約</h2>
+        <p id="selectedSlotText" class="text-text-muted">請先從公告板選擇一個開放時段。</p>
+      </div>
+
+      <form id="bookingForm" class="grid gap-5">
+        <input type="hidden" id="shiftId" />
+        <div class="grid md:grid-cols-2 gap-5">
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">桌遊 / 遊戲</span>
+            <select id="game" class="field" required></select>
+          </label>
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">預約類型</span>
+            <select id="bookingType" class="field" required>
+              <option value="包場">包場</option>
+              <option value="併桌">併桌</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">預約開始</span>
+            <select id="bookingStart" class="field" required></select>
+          </label>
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">預約結束</span>
+            <select id="bookingEnd" class="field" required></select>
+          </label>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">世界（伺服器）</span>
+            <select id="server" class="field" required>
+              <option value="">請選擇世界</option>
+              <option value="伊弗利特">伊弗利特</option>
+              <option value="利維坦">利維坦</option>
+              <option value="迦樓羅">迦樓羅</option>
+              <option value="鳳凰">鳳凰</option>
+              <option value="巴哈姆特">巴哈姆特</option>
+              <option value="泰坦">泰坦</option>
+              <option value="奧汀">奧汀</option>
+            </select>
+          </label>
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">角色名</span>
+            <input id="characterId" class="field" maxlength="40" placeholder="角色全名" required />
+          </label>
+        </div>
+        <div class="grid md:grid-cols-[1fr_160px] gap-5">
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">人數</span>
+            <input id="playerCount" class="field" type="number" min="1" max="4" value="4" required />
+            <span id="playerCountHint" class="field-hint">上限 10 名冒險者</span>
+          </label>
+          <label class="grid gap-2">
+            <span class="text-sm text-gold tracking-widest font-cinzel">預計局數</span>
+            <input id="rounds" class="field" type="number" min="1" max="20" value="1" required />
+          </label>
+        </div>
+        <label class="checkbox-row text-sm text-text-muted">
+          <input id="useGem" type="checkbox" />
+          使用寶石兌換
+        </label>
+        <button id="submitBooking" class="btn-gold px-8 py-4 tracking-widest disabled:opacity-50 disabled:cursor-not-allowed" type="submit" disabled>
+          蓋印送出
+        </button>
+        <p id="formHint" class="text-sm text-text-muted">請先從公告板選擇一個開放時段。選定後將顯示該班次可預約時間。需與其他團留 30 分鐘緩衝。若要加入他人開的併桌，請用下方「加入既有併桌」區塊。</p>
+      </form>
+
+      <div id="joinPanel" class="join-panel hidden mt-8">
+        <h3 class="font-cinzel text-lg gold-text mb-2">加入既有併桌</h3>
+        <p class="text-sm text-text-muted mb-4">請先從上方公告板<strong>選定班次（按預約）</strong>，再填寫「世界」與「角色名」，最後點選欲加入隊伍旁的<strong>藍色加入按鈕</strong>。每次加入登記 <strong>1 名</strong> 冒險者，無須調整人數欄位。</p>
+        <div id="joinList" class="grid gap-3"></div>
+      </div>
+    </div>
+  </section>
+  </div><!-- /view-home -->
+
+  <div id="view-shop" class="app-view hidden section-wrap">
+    <header class="sub-page-header">
+      <p class="sub-page-kicker font-cinzel">SHOP INTERIOR</p>
+      <h2 class="font-cinzel font-bold">店內一覽</h2>
+      <p>歡迎來到狐的桌遊地。以下為店內環境，預約成功後請依地址前來。</p>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 pb-16">
+      <section class="info-panel">
+        <div class="label">店裡地址</div>
+        <div class="address">巴哈姆特海霧村14-3</div>
+        <p class="hint">伺服器：巴哈姆特　｜　海霧村14-3<br>請於遊戲內前往該房屋，向店長報到即可。</p>
+      </section>
+      <section class="gallery" aria-label="店內照片">
+        <figure class="gallery-item">
+          <img src="images/shop/shop-1.png" alt="狐的桌遊地店內大廳" loading="lazy" />
+          <figcaption class="gallery-caption">大廳與會議桌</figcaption>
+        </figure>
+        <figure class="gallery-item">
+          <img src="images/shop/shop-2.png" alt="狐的桌遊地會議桌區" loading="lazy" />
+          <figcaption class="gallery-caption">會議桌區</figcaption>
+        </figure>
+        <figure class="gallery-item">
+          <img src="images/shop/shop-3.png" alt="狐的桌遊地走廊" loading="lazy" />
+          <figcaption class="gallery-caption">店內走廊</figcaption>
+        </figure>
+        <figure class="gallery-item">
+          <img src="images/shop/shop-4.png" alt="狐的桌遊地地下會議室" loading="lazy" />
+          <figcaption class="gallery-caption">地下會議室</figcaption>
+        </figure>
+      </section>
+    </main>
+  </div>
+
+  <div id="view-games" class="app-view hidden section-wrap">
+    <header class="sub-page-header">
+      <p class="sub-page-kicker font-cinzel">GUILD GAME ARCHIVE</p>
+      <h2 class="font-cinzel font-bold">公會桌遊圖鑑</h2>
+      <p>收錄狐的桌遊地可預約的 FF14 桌遊。翻閱規則後，即可至前台登記班次。</p>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 pb-16">
+      <article id="avalon" class="game-panel">
+        <span class="badge">陣營推理</span>
+        <h3 class="game-title font-cinzel">圓桌議事廳：阿瓦隆文字版</h3>
+        <p class="game-tagline">以經典陣營推理桌遊《阿瓦隆》為藍本，改寫為 FF14 遊戲內文字版。在圓桌議事廳中，透過對話、投票與秘密任務，分辨忠臣與叛徒。</p>
+        <div class="meta-grid">
+          <div class="meta-item"><span>類型</span><strong>陣營推理</strong></div>
+          <div class="meta-item"><span>形式</span><strong>FF14 文字版</strong></div>
+          <div class="meta-item"><span>主持</span><strong>店長</strong></div>
+          <div class="meta-item"><span>工具</span><strong>/dice、/tell</strong></div>
+        </div>
+        <h4 class="game-section-title">陣營概覽</h4>
+        <ul>
+          <li><strong>好人陣營（正義方）</strong>：守護亞瑟王的忠臣，彼此不認識身分。</li>
+          <li><strong>壞人陣營（邪惡方）</strong>：人數較少，但互相認識（特殊職業除外）。</li>
+        </ul>
+        <h4 class="game-section-title">開局設置</h4>
+        <ol>
+          <li><strong>領袖產生</strong>：全員使用 <code>/dice 100</code>，點數最高者為首任領袖。</li>
+          <li><strong>身分發放（偏移發牌法）</strong>：計算總點數 ÷ 人數的餘數，依餘數決定名單起始位置；店長透過 <code>/tell</code> 依序私訊各玩家身分。</li>
+        </ol>
+        <h4 class="game-section-title">回合流程</h4>
+        <ol>
+          <li><strong>組隊</strong>：領袖指名出征者（出任務成員）。</li>
+          <li><strong>表決</strong>：全員公開投票，於頻道輸入 <code>1</code>（贊成）或 <code>0</code>（反對）；過半則任務出發。</li>
+          <li><strong>執行</strong>：出征者私密投下【成功】或【失敗】。</li>
+          <li><strong>結局</strong>：達成三勝的一方獲勝，或進入暗殺階段。</li>
+        </ol>
+        <h4 class="game-section-title">勝利條件</h4>
+        <div class="win-box">
+          <ul>
+            <li><strong>正義方獲勝</strong>：取得 3 次任務成功，且梅林未被暗殺。</li>
+            <li><strong>邪惡方獲勝</strong>：取得 3 次任務失敗，或刺殺梅林成功。</li>
+          </ul>
+        </div>
+        <h4 class="game-section-title">特殊規則</h4>
+        <ul>
+          <li><strong>流局懲罰</strong>：若同一輪組隊連續 5 次被投票否決，邪惡方直接獲勝。</li>
+          <li>正義方完成 3 次任務成功後，可能進入<strong>暗殺階段</strong>（刺殺梅林）。</li>
+        </ul>
+        <div class="flavor-quote">
+          圓桌議事廳中，亞瑟王的忠臣與潛伏的叛徒僅隔一席。話語是武器，信任是賭注——在 FF14 的燭光下，每一票都將改寫王國的命運。
+        </div>
+        <a class="btn-gold btn-gold-link" href="docs/avalon-rules.pdf" download="圓桌議事廳-阿瓦隆文字版.pdf">下載完整說明書 PDF</a>
+      </article>
+      <article id="splendor" class="game-panel">
+        <span class="badge">輕策略</span>
+        <h3 class="game-title font-cinzel">【水晶商會】璀璨寶石 ff14 版</h3>
+        <p class="game-tagline">以經典桌遊《璀璨寶石》（Splendor）為藍本的 FF14 主題輕策略遊戲。扮演水晶商會成員，收集碎晶與屬性點數，爭取商會最高榮譽。</p>
+        <div class="meta-grid">
+          <div class="meta-item"><span>人數</span><strong>2–4 人</strong></div>
+          <div class="meta-item"><span>時長</span><strong>約 30 分鐘</strong></div>
+          <div class="meta-item"><span>類型</span><strong>資源管理</strong></div>
+          <div class="meta-item"><span>目標</span><strong>15 分</strong></div>
+        </div>
+        <div class="flavor-quote">
+          在艾歐澤亞的靈脈深處，碎晶是萬物賴以生存的以太結晶。身為水晶商會的一員，你的任務是透過精準的感應與貿易，收集這些純淨的能源。唯有最卓越的經營者，才能在資源匱乏的時刻，召喚出遠古蠻神的加護，贏得商會的最高榮譽。
+        </div>
+        <h4 class="game-section-title">遊戲概覽</h4>
+        <ul>
+          <li><strong>策略經營</strong>：透過領取碎晶（資源）換取屬性卡片。</li>
+          <li><strong>屬性積累</strong>：收集火、冰、風、土、雷等屬性點數。</li>
+          <li><strong>目標達成</strong>：率先獲得 15 分者獲勝。</li>
+        </ul>
+        <h4 class="game-section-title">核心機制</h4>
+        <ul>
+          <li>資源單位為「<strong>碎晶</strong>」，對應 FF14 世界觀中的以太結晶。</li>
+          <li>五大屬性：<strong>火、冰、風、土、雷</strong>。</li>
+          <li>在資源匱乏時，可觸發「<strong>召喚遠古蠻神的加護</strong>」等特殊機制（詳見完整說明書）。</li>
+        </ul>
+        <h4 class="game-section-title">勝利條件</h4>
+        <div class="win-box">
+          <p>率先累積 <strong>15 分</strong> 的冒險者，贏得水晶商會最高榮譽。</p>
+        </div>
+        <h4 class="game-section-title">適合對象</h4>
+        <p>適合喜歡輕度策略、資源換分、節奏明快的玩家；規則門檻低，但仍有足夠的佈局空間。</p>
+        <a class="btn-gold btn-gold-link" href="docs/splendor-rules.pdf" download="水晶商會-璀璨寶石.pdf">下載完整說明書 PDF</a>
+      </article>
+    </main>
+  </div>
+
+  <div id="view-member" class="app-view hidden section-wrap">
+    <header class="sub-page-header">
+      <p class="sub-page-kicker font-cinzel">GUILD MEMBERSHIP</p>
+      <h2 class="font-cinzel font-bold">會員專區</h2>
+      <p>查詢累積點數與消費進度。會員登記請洽店長於後台辦理；點數存入哪個角色帳號由您自行決定。</p>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 pb-16">
+      <section class="panel p-6 md:p-8 pt-10">
+        <span class="badge mb-4">查詢</span>
+        <h3 class="font-cinzel text-xl gold-text mb-4">點數查詢</h3>
+        <p class="text-text-muted text-sm mb-5">輸入世界與角色名，查詢目前累積點數。</p>
+        <form id="memberLookupForm" class="grid gap-5">
+          <div class="grid md:grid-cols-2 gap-5">
+            <label class="grid gap-2">
+              <span class="text-sm text-gold tracking-widest font-cinzel">世界（伺服器）</span>
+              <select id="memberLookupServer" class="field" required>
+                <option value="">請選擇世界</option>
+                <option value="伊弗利特">伊弗利特</option>
+                <option value="利維坦">利維坦</option>
+                <option value="迦樓羅">迦樓羅</option>
+                <option value="鳳凰">鳳凰</option>
+                <option value="巴哈姆特">巴哈姆特</option>
+                <option value="泰坦">泰坦</option>
+                <option value="奧汀">奧汀</option>
+              </select>
+            </label>
+            <label class="grid gap-2">
+              <span class="text-sm text-gold tracking-widest font-cinzel">角色名</span>
+              <input id="memberLookupCharacter" class="field" maxlength="40" placeholder="角色全名" required />
+            </label>
+          </div>
+          <button type="submit" class="btn-outline px-8 py-3 tracking-widest w-full md:w-auto">查詢點數</button>
+        </form>
+        <div id="memberLookupResult"></div>
+      </section>
+      <section class="panel p-6 md:p-8 pt-10 mt-8">
+        <span class="badge mb-4">制度</span>
+        <h3 class="font-cinzel text-xl gold-text mb-4">點數規則</h3>
+        <p class="text-text-muted text-sm leading-7 mb-4">每累積消費 <strong>350,000 gil</strong> 自動獲得 <strong>1 點</strong>。結帳時請告知店長點數要存入哪個已登記角色。</p>
+        <table class="redeem-table">
+          <thead>
+            <tr><th>點數</th><th>兌換</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>6 點</td><td>一場《阿瓦隆》免費</td></tr>
+            <tr><td>7 點</td><td>一場《阿瓦隆 2》免費</td></tr>
+            <tr><td>7 點</td><td>一場《璀璨寶石》免費</td></tr>
+          </tbody>
+        </table>
+        <p class="text-text-muted text-sm mt-4 leading-6">完整說明請見首頁「<button type="button" class="text-gold underline bg-transparent border-0 cursor-pointer font-inherit p-0" onclick="switchView('home'); setTimeout(() => scrollToSection('#rules'), 100)">冒險公會章程</button>」。</p>
+      </section>
+    </main>
+  </div>
+
+  <footer class="py-10 text-center text-sm section-wrap">
+    <div class="font-cinzel brand tracking-[0.35em] mb-2 brand-with-seals">
+      <span class="wax-seal wax-seal-md" aria-hidden="true"><svg class="wax-seal-icon" viewBox="0 0 24 24"><use href="#icon-fox-seal"/></svg></span>
+      <span>狐的桌遊地</span>
+      <span class="wax-seal wax-seal-md" aria-hidden="true"><svg class="wax-seal-icon" viewBox="0 0 24 24"><use href="#icon-fox-seal"/></svg></span>
+    </div>
+    <p>FF14 桌遊預約系統</p>
+  </footer>
+
+  <script src="ui-feedback.js"></script>
+  <script>
+    const API_URL = window.FF14_BOOKING_API_URL;
+    const toast = (msg, type) => UIFeedback.toast(msg, type);
+    const state = {
+      shifts: [],
+      selectedShift: null,
+      loading: false
+    };
+
+    const els = {
+      connectionStatus: document.getElementById('connectionStatus'),
+      statusText: document.getElementById('statusText'),
+      lobbyNotice: document.getElementById('lobbyNotice'),
+      slotScrollWrap: document.getElementById('slotScrollWrap'),
+      slotScrollHint: document.getElementById('slotScrollHint'),
+      slotList: document.getElementById('slotList'),
+      slotScrollPrev: document.getElementById('slotScrollPrev'),
+      slotScrollNext: document.getElementById('slotScrollNext'),
+      selectedSlotText: document.getElementById('selectedSlotText'),
+      shiftId: document.getElementById('shiftId'),
+      game: document.getElementById('game'),
+      bookingType: document.getElementById('bookingType'),
+      bookingStart: document.getElementById('bookingStart'),
+      bookingEnd: document.getElementById('bookingEnd'),
+      server: document.getElementById('server'),
+      characterId: document.getElementById('characterId'),
+      playerCount: document.getElementById('playerCount'),
+      playerCountHint: document.getElementById('playerCountHint'),
+      rounds: document.getElementById('rounds'),
+      useGem: document.getElementById('useGem'),
+      form: document.getElementById('bookingForm'),
+      submit: document.getElementById('submitBooking'),
+      formHint: document.getElementById('formHint'),
+      joinPanel: document.getElementById('joinPanel'),
+      joinList: document.getElementById('joinList'),
+      memberLookupForm: document.getElementById('memberLookupForm'),
+      memberLookupServer: document.getElementById('memberLookupServer'),
+      memberLookupCharacter: document.getElementById('memberLookupCharacter'),
+      memberLookupResult: document.getElementById('memberLookupResult')
+    };
+
+    function timeToMinutes(t) {
+      const parts = String(t || '0:0').split(':');
+      return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+
+    function minutesToTime(m) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    }
+
+    function buildHourlySlots(startTime, endTime) {
+      const start = timeToMinutes(startTime);
+      const end = timeToMinutes(endTime);
+      if (end <= start) return [startTime, endTime].filter(Boolean);
+      const slots = [];
+      for (let m = start; m <= end; m += 60) {
+        slots.push(minutesToTime(m));
+      }
+      return slots.length ? slots : [startTime];
+    }
+
+    function getShiftTimeSlots(shift) {
+      if (!shift) return [];
+      return buildHourlySlots(shift.startTime || '16:00', shift.endTime || '22:00');
+    }
+
+    function updateFormHint(shift) {
+      if (!shift) {
+        els.formHint.textContent = '請先從公告板選擇一個開放時段。選定後將顯示該班次可預約時間。需與其他團留 30 分鐘緩衝。若要加入他人開的併桌，請用下方「加入既有併桌」區塊。';
+        return;
+      }
+      els.formHint.textContent = `可預約時段為 ${shift.startTime}–${shift.endTime}（依所選班次公告），需與其他團留 30 分鐘緩衝。若要加入他人開的併桌，請用下方「加入既有併桌」區塊。`;
+    }
+
+    function formatNum(n) {
+      return String(Math.max(0, parseInt(n, 10) || 0));
+    }
+
+    function isSplendorGame(name) {
+      return /璀璨寶石|水晶商會|Splendor/i.test(String(name || ''));
+    }
+
+    function getPlayerLimit(gameName) {
+      return isSplendorGame(gameName) ? { min: 1, max: 4 } : { min: 1, max: 10 };
+    }
+
+    function updatePlayerCountLimits() {
+      const { min, max } = getPlayerLimit(els.game.value);
+      els.playerCount.min = String(min);
+      els.playerCount.max = String(max);
+      let current = parseInt(els.playerCount.value, 10) || min;
+      if (current > max) current = max;
+      if (current < min) current = min;
+      els.playerCount.value = String(current);
+      els.playerCountHint.textContent = isSplendorGame(els.game.value)
+        ? '【璀璨寶石】單次預約最多 4 名冒險者'
+        : '上限 10 名冒險者';
+    }
+
+    function buildHeadcountBlock(total, gameName) {
+      const max = getPlayerLimit(gameName).max;
+      const count = Math.min(max, Math.max(0, parseInt(total, 10) || 0));
+      const block = document.createElement('div');
+      block.className = 'headcount-block';
+
+      const label = document.createElement('div');
+      label.className = 'headcount-label';
+      label.textContent = '參與圖記';
+
+      const track = document.createElement('div');
+      track.className = 'seal-track';
+      for (let i = 0; i < max; i += 1) {
+        const seal = document.createElement('span');
+        seal.className = `seal-mark${i < count ? ' filled' : ''}${isSplendorGame(gameName) ? ' blue' : ''}`;
+        seal.title = i < count ? '已登記' : '空位';
+        track.appendChild(seal);
+      }
+
+      const caption = document.createElement('div');
+      caption.className = 'headcount-caption';
+      caption.textContent = `${formatNum(count)} / ${formatNum(max)} 名冒險者`;
+
+      block.append(label, track, caption);
+      return block;
+    }
+
+    function scrollSlotList(direction) {
+      const track = els.slotList;
+      if (!track) return;
+      const amount = Math.max(280, track.clientWidth * 0.75);
+      track.scrollBy({ left: direction * amount, behavior: 'smooth' });
+    }
+
+    function updateSlotScrollHint() {
+      const track = els.slotList;
+      const cards = track ? track.children.length : 0;
+      const showHint = cards > 1;
+      els.slotScrollHint?.classList.toggle('hidden', !showHint);
+      els.slotScrollWrap?.classList.toggle('hidden', cards === 0);
+    }
+
+    function scrollToSection(selector) {
+      switchView('home', { scroll: false });
+      requestAnimationFrame(() => {
+        document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    const APP_VIEWS = ['home', 'shop', 'games', 'member'];
+
+    function switchView(name, opts = {}) {
+      if (!APP_VIEWS.includes(name)) name = 'home';
+      APP_VIEWS.forEach((view) => {
+        const el = document.getElementById('view-' + view);
+        if (el) el.classList.toggle('hidden', view !== name);
+      });
+      document.querySelectorAll('.nav-tab').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.view === name);
+      });
+      if (opts.scroll !== false) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      const nextHash = name === 'home' ? '' : '#' + name;
+      if (location.hash !== nextHash) {
+        history.replaceState(null, '', location.pathname + location.search + nextHash);
+      }
+      if (name === 'member') { /* 會員專區 */ }
+    }
+
+    function initRouting() {
+      const hash = (location.hash || '').replace('#', '');
+      if (['shop', 'games', 'member'].includes(hash)) {
+        switchView(hash, { scroll: false });
+      }
+      window.addEventListener('hashchange', () => {
+        const h = (location.hash || '').replace('#', '');
+        if (['shop', 'games', 'member'].includes(h)) switchView(h, { scroll: false });
+        else switchView('home', { scroll: false });
+      });
+      document.querySelectorAll('.nav-tab').forEach((btn) => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+      });
+      const brand = document.querySelector('.brand-home');
+      if (brand) {
+        brand.addEventListener('click', () => switchView('home'));
+        brand.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            switchView('home');
+          }
+        });
+      }
+    }
+
+    function setStatus(status, text) {
+      els.connectionStatus.className = `status-indicator status-${status}`;
+      els.statusText.textContent = text;
+    }
+
+    function isOpenShift(shift) {
+      const status = String(shift?.status || '').trim();
+      return status !== '已結束';
+    }
+
+    async function loadShiftsData() {
+      const isFileProtocol = location.protocol === 'file:';
+      const loaders = isFileProtocol
+        ? [loadLobbyJsonp, apiGetShifts]
+        : [apiGetShifts, loadLobbyJsonp];
+
+      let lastError;
+      for (const loader of loaders) {
+        try {
+          return await loader();
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error('無法讀取班次資料。請重新部署 gas/Code.gs，或用 Live Server 開啟網站。');
+    }
+
+    async function apiGetShifts() {
+      return apiGet('getShifts');
+    }
+
+    async function apiGet(action) {
+      const url = `${API_URL}?action=${encodeURIComponent(action)}&t=${Date.now()}`;
+      const res = await fetch(url);
+      return res.json();
+    }
+
+    async function apiPost(payload) {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    }
+
+    function renderMemberLookupResult(member, isError, message) {
+      els.memberLookupResult.innerHTML = '';
+      if (isError) {
+        toast(message || '查詢失敗', 'error');
+        return;
+      }
+      toast(`查詢成功：${member.characterId} 目前 ${formatNum(member.points)} 點`, 'success');
+      const box = document.createElement('div');
+      box.className = 'member-result-box';
+      box.innerHTML = `
+        <p class="member-info-line"><strong>${member.server}</strong> / ${member.characterId}</p>
+        <div class="member-points-display">
+          <div class="member-points-value">${formatNum(member.points)}</div>
+          <div class="member-points-label">累積點數</div>
+        </div>
+        <p class="member-info-line">累積消費：${formatNum(member.totalSpent || 0)} gil</p>
+        <p class="member-info-line">距離下一點：尚差 ${formatNum(member.spendToNextPoint != null ? member.spendToNextPoint : 350000)} gil</p>
+        ${member.lastUpdated ? `<p class="member-info-line">最後更新：${member.lastUpdated}</p>` : ''}
+      `;
+      els.memberLookupResult.appendChild(box);
+    }
+
+    async function lookupMemberPoints(server, characterId) {
+      const params = new URLSearchParams({
+        action: 'lookupMember',
+        server,
+        characterId,
+        t: Date.now()
+      });
+      const res = await fetch(`${API_URL}?${params}`);
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.message || '查詢失敗');
+      }
+      return result.data;
+    }
+
+    async function submitMemberLookup(event) {
+      event.preventDefault();
+      const server = els.memberLookupServer.value.trim();
+      const characterId = els.memberLookupCharacter.value.trim();
+      if (!server || !characterId) return toast('請填寫世界與角色名', 'error');
+
+      return UIFeedback.withLoading(async () => {
+        els.memberLookupResult.innerHTML = '';
+        try {
+          const member = await lookupMemberPoints(server, characterId);
+          renderMemberLookupResult(member);
+        } catch (error) {
+          renderMemberLookupResult(null, true, error.message);
+        }
+      }, '查詢點數中...');
+    }
+
+    function loadLobbyJsonp() {
+      return new Promise((resolve, reject) => {
+        const callbackName = `handleLobbyResponse_${Date.now()}`;
+        const script = document.createElement('script');
+        const timeout = window.setTimeout(() => {
+          cleanup();
+          reject(new Error('連線逾時'));
+        }, 10000);
+
+        function cleanup() {
+          window.clearTimeout(timeout);
+          delete window[callbackName];
+          script.remove();
+        }
+
+        window[callbackName] = (data) => {
+          cleanup();
+          resolve(data);
+        };
+        script.onerror = () => {
+          cleanup();
+          reject(new Error('JSONP 連線失敗。請到 Apps Script 重新部署 gas/Code.gs 後再試。'));
+        };
+        script.src = `${API_URL}?action=getShifts&callback=${callbackName}&t=${Date.now()}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadLobby() {
+      if (!API_URL) {
+        setStatus('offline', '尚未設定 API');
+        showNotice('尚未設定 Google Apps Script API URL。');
+        return;
+      }
+
+      return UIFeedback.withLoading(async () => {
+        state.loading = true;
+        setStatus('checking', '連線檢查中...');
+        showNotice('正在翻閱公會公告板...', true);
+
+        try {
+          const result = await loadShiftsData();
+
+          state.loading = false;
+          if (!result || result.success === false) {
+            setStatus('offline', '後端錯誤');
+            showNotice(result?.message || '後端回傳錯誤，請檢查試算表分頁設定。');
+            return;
+          }
+
+          state.shifts = Array.isArray(result.data) ? result.data : [];
+          setStatus('online', '公會據點連線正常');
+          renderShifts();
+        } catch (error) {
+          state.loading = false;
+          setStatus('offline', '連線失敗');
+          showNotice(error.message || '無法連線到據點資料，請稍後再試。');
+        }
+      }, '正在翻閱公會公告板...');
+    }
+
+    function showNotice(message, withSpinner = false) {
+      els.slotList.innerHTML = '';
+      els.slotScrollWrap?.classList.add('hidden');
+      els.slotScrollHint?.classList.add('hidden');
+      els.lobbyNotice.hidden = false;
+      els.lobbyNotice.textContent = '';
+      if (withSpinner) {
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner mx-auto mb-4';
+        els.lobbyNotice.appendChild(spinner);
+      }
+      els.lobbyNotice.appendChild(document.createTextNode(message));
+    }
+
+    function formatDate(date) {
+      if (!date) return '未指定日期';
+      const parsed = new Date(`${date}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) return date;
+      return parsed.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' });
+    }
+
+    function renderShifts() {
+      const shifts = state.shifts
+        .filter(isOpenShift)
+        .sort((a, b) => `${a.date || ''}${a.startTime || ''}`.localeCompare(`${b.date || ''}${b.startTime || ''}`));
+
+      els.slotList.innerHTML = '';
+
+      if (!shifts.length) {
+        const message = state.shifts.length
+          ? '目前有班次但皆已結束，請等候主持人發布新班次。'
+          : '目前公告板上尚無班次，請稍後再來。';
+        showNotice(message);
+        els.slotScrollWrap?.classList.add('hidden');
+        els.slotScrollHint?.classList.add('hidden');
+        return;
+      }
+
+      els.lobbyNotice.hidden = true;
+      els.slotScrollWrap?.classList.remove('hidden');
+
+      shifts.forEach((shift) => {
+        const card = document.createElement('article');
+        card.className = `slot-card card-hover ${state.selectedShift?.shiftId === shift.shiftId ? 'selected' : ''}`;
+
+        const header = document.createElement('div');
+        header.className = 'flex justify-between items-start gap-4 mb-4';
+
+        const titleWrap = document.createElement('div');
+        const date = document.createElement('h3');
+        date.className = 'text-2xl font-bold gold-text mb-2';
+        date.textContent = formatDate(shift.date);
+        const time = document.createElement('p');
+        time.className = 'text-text-muted';
+        time.textContent = `${shift.startTime || '--:--'} - ${shift.endTime || '--:--'}`;
+        const host = document.createElement('p');
+        host.className = 'text-sm text-gold mt-2';
+        host.textContent = `主持人：${shift.host || '未指定'}`;
+        titleWrap.append(date, time, host);
+
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = shift.status || '未知';
+        header.append(titleWrap, badge);
+
+        const games = document.createElement('p');
+        games.className = 'text-sm text-text-muted mb-4';
+        games.textContent = `可預約：${(shift.gamesOffered || []).filter(Boolean).join('、') || '未設定'}`;
+
+        const bookingList = document.createElement('div');
+        bookingList.className = 'booking-list';
+        const bookings = shift.bookings || [];
+        if (bookings.length) {
+          bookingList.innerHTML = '<p class="text-gold font-cinzel text-sm mb-2">公告板上的契約</p>';
+          bookings.forEach((booking) => {
+            const item = document.createElement('div');
+            item.className = 'booking-item';
+            const total = getBookingTotal(booking);
+
+            const meta = document.createElement('div');
+            meta.className = 'booking-meta';
+            const line = document.createElement('span');
+            line.className = 'booking-time-game';
+            line.textContent = `${booking.startTime}–${booking.endTime}｜${booking.game}（${booking.type}）`;
+            meta.append(line, buildHeadcountBlock(total, booking.game));
+
+            item.appendChild(meta);
+            bookingList.appendChild(item);
+          });
+        } else {
+          bookingList.innerHTML = '<p class="text-text-muted">公告板上尚無契約</p>';
+        }
+
+        const button = document.createElement('button');
+        button.className = 'btn-gold px-6 py-3 tracking-widest w-full mt-5';
+        button.type = 'button';
+        button.textContent = '我要預約';
+        button.addEventListener('click', () => selectShift(shift));
+
+        card.append(header, games, bookingList, button);
+        els.slotList.appendChild(card);
+      });
+      updateSlotScrollHint();
+    }
+
+    function populateTimeSelect(selectEl, times, selected) {
+      selectEl.innerHTML = '';
+      times.forEach((time) => {
+        const option = document.createElement('option');
+        option.value = time;
+        option.textContent = time;
+        if (time === selected) option.selected = true;
+        selectEl.appendChild(option);
+      });
+    }
+
+    function populateBookingTimes(startValue, endValue) {
+      const shift = state.selectedShift;
+      const times = getShiftTimeSlots(shift);
+      if (times.length < 2) {
+        populateTimeSelect(els.bookingStart, times.slice(0, 1), times[0]);
+        populateTimeSelect(els.bookingEnd, times.slice(0, 1), times[0]);
+        return;
+      }
+      const startTimes = times.slice(0, -1);
+      populateTimeSelect(els.bookingStart, startTimes, startValue || startTimes[0]);
+      const startIdx = times.indexOf(els.bookingStart.value);
+      const endOptions = times.slice(Math.max(startIdx + 1, 1));
+      const resolvedEnd = endOptions.includes(endValue) ? endValue : endOptions[endOptions.length - 1];
+      populateTimeSelect(els.bookingEnd, endOptions, resolvedEnd);
+    }
+
+    function populateGameOptions(shift) {
+      els.game.innerHTML = '';
+      (shift.gamesOffered || []).filter(Boolean).forEach((game) => {
+        const option = document.createElement('option');
+        option.value = game.trim();
+        option.textContent = game.trim();
+        els.game.appendChild(option);
+      });
+      updatePlayerCountLimits();
+    }
+
+    function getBookingTotal(booking) {
+      return (parseInt(booking.playerCount, 10) || 0) + (parseInt(booking.joinedCount, 10) || 0);
+    }
+
+    function getRemainingSeats(booking) {
+      const max = getPlayerLimit(booking.game).max;
+      return Math.max(0, max - getBookingTotal(booking));
+    }
+
+    function renderJoinOptions(shift) {
+      els.joinList.innerHTML = '';
+      const joinable = (shift.bookings || []).filter((booking) => {
+        return booking.type === '併桌' && getRemainingSeats(booking) > 0;
+      });
+
+      if (!joinable.length) {
+        els.joinPanel.classList.add('hidden');
+        return;
+      }
+
+      els.joinPanel.classList.remove('hidden');
+      joinable.forEach((booking) => {
+        const row = document.createElement('div');
+        row.className = 'booking-item';
+        const total = getBookingTotal(booking);
+        const remaining = getRemainingSeats(booking);
+
+        const meta = document.createElement('div');
+        meta.className = 'booking-meta';
+        const title = document.createElement('strong');
+        title.textContent = booking.game;
+        const sub = document.createElement('div');
+        sub.className = 'text-text-muted text-sm mb-1';
+        sub.textContent = `${booking.startTime}–${booking.endTime}｜尚餘 ${formatNum(remaining)} 席`;
+        meta.append(title, sub, buildHeadcountBlock(total, booking.game));
+        row.appendChild(meta);
+
+        const joinBtn = document.createElement('button');
+        joinBtn.className = 'btn-join px-4 py-2 text-sm';
+        joinBtn.type = 'button';
+        joinBtn.dataset.async = '';
+        joinBtn.dataset.loadingText = '加入併桌中';
+        joinBtn.textContent = `加入（+1）`;
+        joinBtn.addEventListener('click', () => joinBooking(booking));
+        row.appendChild(joinBtn);
+        els.joinList.appendChild(row);
+      });
+    }
+
+    function selectShift(shift) {
+      state.selectedShift = shift;
+      els.shiftId.value = shift.shiftId || '';
+      els.submit.disabled = false;
+      els.selectedSlotText.textContent = `${formatDate(shift.date)} ${shift.startTime || '--:--'} - ${shift.endTime || '--:--'}｜主持人 ${shift.host || ''}`;
+      populateBookingTimes(shift.startTime, shift.endTime);
+      updateFormHint(shift);
+      populateGameOptions(shift);
+      renderJoinOptions(shift);
+      renderShifts();
+      scrollToSection('#booking');
+    }
+
+    async function joinBooking(booking) {
+      const server = els.server.value.trim();
+      const characterId = els.characterId.value.trim();
+      const addCount = 1;
+      const remaining = getRemainingSeats(booking);
+
+      if (!server || !characterId) {
+        toast('請先選擇世界並填寫角色名。', 'error');
+        return;
+      }
+      if (remaining < 1) {
+        toast('此桌已無空位。', 'error');
+        return;
+      }
+
+      return UIFeedback.withLoading(async () => {
+        try {
+          const result = await apiPost({
+            action: 'joinExistingBooking',
+            bookingId: booking.bookingId,
+            addCount,
+            members: [{ server, characterId }]
+          });
+          if (!result.success) {
+            toast(result.message || '加入失敗', 'error');
+            return;
+          }
+          toast(result.message || '成功加入併桌！', 'success');
+          await loadLobby();
+        } catch (error) {
+          console.error(error);
+          toast('加入失敗，請稍後再試。', 'error');
+        }
+      }, '加入併桌中...');
+    }
+
+    async function submitBooking(event) {
+      event.preventDefault();
+      if (!state.selectedShift) {
+        toast('請先選擇班次。', 'error');
+        return;
+      }
+
+      const payload = {
+        action: 'makeBooking',
+        shiftId: state.selectedShift.shiftId,
+        bookingStartTime: els.bookingStart.value,
+        bookingEndTime: els.bookingEnd.value,
+        game: els.game.value,
+        type: els.bookingType.value,
+        members: [{
+          server: els.server.value.trim(),
+          characterId: els.characterId.value.trim()
+        }],
+        useGem: els.useGem.checked,
+        playerCount: parseInt(els.playerCount.value, 10) || 1,
+        rounds: parseInt(els.rounds.value, 10) || 1
+      };
+
+      if (!payload.members[0].server || !payload.members[0].characterId) {
+        toast('請選擇世界並填寫角色名。', 'error');
+        return;
+      }
+      if (!payload.bookingStartTime || !payload.bookingEndTime) {
+        toast('請填寫預約時間。', 'error');
+        return;
+      }
+      if (payload.bookingStartTime >= payload.bookingEndTime) {
+        toast('結束時間必須晚於開始時間。', 'error');
+        return;
+      }
+
+      if (payload.type === '併桌') {
+        const duplicate = (state.selectedShift.bookings || []).find((booking) =>
+          booking.type === '併桌'
+          && booking.game === payload.game
+          && booking.startTime === payload.bookingStartTime
+        );
+        if (duplicate && getRemainingSeats(duplicate) > 0) {
+          const goJoin = confirm('此時段已有同遊戲併桌且尚有空位。是否改為加入該桌？（每次加入 1 名）');
+          if (goJoin) {
+            await joinBooking(duplicate);
+            return;
+          }
+        }
+      }
+
+      const limit = getPlayerLimit(payload.game);
+      if (payload.playerCount < limit.min || payload.playerCount > limit.max) {
+        toast(isSplendorGame(payload.game)
+          ? '【璀璨寶石】人數最多 4 名。'
+          : `人數須為 1 至 ${limit.max} 名。`, 'error');
+        return;
+      }
+
+      els.submit.disabled = true;
+      return UIFeedback.withLoading(async () => {
+        try {
+          const result = await apiPost(payload);
+          if (!result.success) {
+            toast(result.message || '預約失敗', 'error');
+            return;
+          }
+          toast(result.message || '預約成功！', 'success');
+          els.form.reset();
+          els.playerCount.value = '4';
+          els.rounds.value = '1';
+          state.selectedShift = null;
+          els.shiftId.value = '';
+          els.joinPanel.classList.add('hidden');
+          els.selectedSlotText.textContent = '請先從公告板選擇一個開放時段。';
+          updateFormHint(null);
+          await new Promise((resolve) => window.setTimeout(resolve, 800));
+          await loadLobby();
+        } catch (error) {
+          console.error(error);
+          toast('送出失敗，請稍後再試。', 'error');
+        } finally {
+          els.submit.disabled = !state.selectedShift;
+        }
+      }, '蓋印中...');
+    }
+
+    document.getElementById('refreshLobbyBtn')?.addEventListener('click', loadLobby);
+    els.game.addEventListener('change', updatePlayerCountLimits);
+    els.bookingStart.addEventListener('change', () => {
+      populateBookingTimes(els.bookingStart.value, null);
+    });
+    els.slotScrollPrev?.addEventListener('click', () => scrollSlotList(-1));
+    els.slotScrollNext?.addEventListener('click', () => scrollSlotList(1));
+    els.memberLookupForm?.addEventListener('submit', submitMemberLookup);
+
+    els.form.addEventListener('submit', submitBooking);
+    updateFormHint(null);
+    initRouting();
+    loadLobby();
+  </script>
+  <script src="fx-bg.js"></script>
+</body>
+</html>

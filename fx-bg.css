@@ -1,0 +1,220 @@
+/* 狐的桌遊地 — 全站背景特效 */
+#bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fx-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* 店內照背景 — 輪播多張 */
+.fx-photo-stack {
+  position: absolute;
+  inset: 0;
+}
+
+.fx-shop-photo {
+  position: absolute;
+  inset: 0;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: brightness(0.72) saturate(0.78) sepia(0.28) contrast(1.03) hue-rotate(-6deg);
+  transform: scale(1.06);
+  opacity: 0;
+  transition: opacity 2.8s ease-in-out;
+}
+
+.fx-shop-photo.active {
+  opacity: 1;
+  animation: fx-photo-drift 28s ease-in-out infinite alternate;
+}
+
+/* 羊皮紙濾色 — 罩在店內照之上 */
+.fx-shop-overlay {
+  background:
+    var(--texture-paper, url('https://www.transparenttextures.com/patterns/aged-paper.png')),
+    radial-gradient(ellipse 78% 62% at 50% 38%, rgba(212, 188, 148, 0.14), transparent 72%),
+    radial-gradient(ellipse 100% 100% at 50% 100%, rgba(74, 56, 40, 0.28), rgba(107, 83, 68, 0.2) 50%, rgba(125, 99, 80, 0.12) 100%),
+    linear-gradient(
+      180deg,
+      rgba(125, 99, 80, 0.28) 0%,
+      rgba(107, 83, 68, 0.38) 52%,
+      rgba(90, 70, 52, 0.44) 100%
+    );
+}
+
+.fx-paper-veil {
+  background: var(--texture-paper, url('https://www.transparenttextures.com/patterns/aged-paper.png'));
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+}
+
+/* 木紋質感 — 旋狀年輪 */
+.fx-wood-grain {
+  background:
+    repeating-radial-gradient(
+      circle at 50% 42%,
+      transparent 0 28px,
+      rgba(28, 16, 8, 0.28) 28px 30px,
+      transparent 30px 68px,
+      rgba(55, 34, 18, 0.16) 68px 70px,
+      transparent 70px 120px
+    ),
+    repeating-conic-gradient(
+      from 15deg at 50% 42%,
+      rgba(38, 22, 10, 0.32) 0deg 8deg,
+      rgba(90, 58, 34, 0.12) 8deg 16deg,
+      rgba(48, 28, 14, 0.28) 16deg 24deg,
+      rgba(85, 54, 32, 0.1) 24deg 32deg
+    );
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+}
+
+@keyframes fx-photo-drift {
+  0%   { transform: scale(1.06) translate(0, 0); }
+  100% { transform: scale(1.1) translate(-0.8%, -0.5%); }
+}
+
+/* 燭火暖光 — 緩慢游移 */
+.fx-glow-warm {
+  background:
+    radial-gradient(ellipse 50% 40% at 18% 78%, rgba(220, 130, 50, 0.18), transparent 72%),
+    radial-gradient(ellipse 45% 35% at 82% 70%, rgba(200, 100, 35, 0.14), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 50% 20%, rgba(160, 100, 45, 0.1), transparent 68%);
+  animation: fx-warm-drift 14s ease-in-out infinite alternate;
+  mix-blend-mode: soft-light;
+}
+
+.fx-glow-cool {
+  background:
+    radial-gradient(ellipse 30% 22% at 72% 22%, rgba(50, 80, 120, 0.04), transparent 70%);
+  animation: fx-cool-drift 18s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+@keyframes fx-warm-drift {
+  0%   { opacity: 0.75; transform: scale(1) translate(0, 0); }
+  50%  { opacity: 1; transform: scale(1.04) translate(1.5%, -1%); }
+  100% { opacity: 0.85; transform: scale(1.02) translate(-1%, 0.5%); }
+}
+
+@keyframes fx-cool-drift {
+  0%   { opacity: 0.5; transform: translate(0, 0); }
+  100% { opacity: 0.85; transform: translate(-2%, 1.5%); }
+}
+
+/* 飄動薄霧 */
+.fx-fog {
+  opacity: 0.35;
+  filter: blur(28px);
+}
+
+.fx-fog-a {
+  background: linear-gradient(105deg, transparent 30%, rgba(90, 70, 50, 0.12) 50%, transparent 70%);
+  animation: fx-fog-slide-a 22s linear infinite;
+}
+
+.fx-fog-b {
+  background: linear-gradient(-75deg, transparent 25%, rgba(107, 83, 68, 0.1) 48%, transparent 72%);
+  animation: fx-fog-slide-b 28s linear infinite;
+  opacity: 0.22;
+}
+
+@keyframes fx-fog-slide-a {
+  0%   { transform: translateX(-8%) translateY(0); }
+  100% { transform: translateX(8%) translateY(-2%); }
+}
+
+@keyframes fx-fog-slide-b {
+  0%   { transform: translateX(6%) translateY(2%); }
+  100% { transform: translateX(-6%) translateY(-1%); }
+}
+
+/* 餘燼粒子 canvas */
+.fx-embers-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+}
+
+/* 掃描微光（極淡） */
+.fx-shimmer {
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(200, 160, 90, 0.03) 50%,
+    transparent 58%
+  );
+  background-size: 200% 200%;
+  animation: fx-shimmer-pass 8s ease-in-out infinite;
+}
+
+@keyframes fx-shimmer-pass {
+  0%, 100% { background-position: 120% 50%; opacity: 0; }
+  45%      { opacity: 0.6; }
+  55%      { background-position: -20% 50%; opacity: 0; }
+}
+
+/* Hero 聚光 */
+.hero-spotlight {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 50% 45% at 50% 42%, rgba(212, 188, 148, 0.18), transparent 65%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(125, 99, 80, 0.12), transparent 70%);
+  animation: fx-hero-pulse 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes fx-hero-pulse {
+  0%   { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.03); }
+}
+
+/* 全站羊皮紙暗角與紙紋 */
+body.fx-enabled::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(212, 188, 148, 0.08), transparent 65%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, transparent 30%, rgba(74, 56, 40, 0.22) 100%);
+  animation: fx-vignette-breathe 10s ease-in-out infinite alternate;
+}
+
+body.fx-enabled::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--texture-paper, url('https://www.transparenttextures.com/patterns/aged-paper.png'));
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+}
+
+@keyframes fx-vignette-breathe {
+  0%   { opacity: 1; }
+  100% { opacity: 0.92; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-shop-photo { animation: none !important; transform: scale(1.06); }
+  .fx-glow-warm, .fx-glow-cool, .fx-fog-a, .fx-fog-b,
+  .fx-shimmer, .hero-spotlight, body.fx-enabled::before {
+    animation: none !important;
+  }
+  .fx-embers-canvas { display: none; }
+}
